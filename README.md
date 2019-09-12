@@ -29,11 +29,62 @@ Register package facade in `config/app.php` in `aliases` section
 CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys::class,
 ```
 
-### Publish Configuration File
+### Publish Configuration File, Run migrations
 
 ```bash
 php artisan vendor:publish --provider="CustomD\EloquentAsyncKeys\ServiceProvider" --tag="config"
+php artisan migrate
 ```
+
+You will need to add a foreign key migration to your users table:
+example :
+1.  run `php artisan make:migration UserKeystore`
+2.  update the generated file to read as per example below
+```php
+<?php
+
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+
+class UserKeystore extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+		Schema::table('users', function (Blueprint $table) {
+			$table->unsignedBigInteger('rsa_keystore_id')->nullable();
+			$table->foreign('rsa_keystore_id')->references('id')->on('rsa_keystore')->onDelete('CASCADE')->onUpdate('RESTRICT');
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+		$table->dropColumn(['rsa_keystore_id']);
+    }
+}
+
+```
+
+3. Update your User Model and add the following method:
+```php
+use CustomD\EloquentAsyncKeys\Model\RsaKeystore;
+...
+	public function rsaKeys()
+    {
+        return $this->belongsTo(RsaKeystore::class, 'rsa_keystore_id');
+    }
+```
+
 
 ## Usage
 
