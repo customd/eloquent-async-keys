@@ -4,17 +4,18 @@ namespace CustomD\EloquentAsyncKeys;
 
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
-	protected const CONFIG_PATH = __DIR__.'/../config/eloquent-async-keys.php';
-	protected const MIGRATIONS_PATH  = __DIR__.'/../database/migrations/';
+    protected const CONFIG_PATH = __DIR__.'/../config/eloquent-async-keys.php';
+
+    protected const MIGRATIONS_PATH = __DIR__.'/../database/migrations/';
 
     public function boot()
     {
         $this->publishes([
             self::CONFIG_PATH => config_path('eloquent-async-keys.php'),
-		], 'config');
+        ], 'config');
 
-		//set our migratinos directory
-		$this->loadMigrationsFrom(self::MIGRATIONS_PATH);
+        //set our migratinos directory
+        $this->loadMigrationsFrom(self::MIGRATIONS_PATH);
     }
 
     public function register()

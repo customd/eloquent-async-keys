@@ -5,12 +5,11 @@ namespace CustomD\EloquentAsyncKeys\Tests;
 use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase;
 use CustomD\EloquentAsyncKeys\Keys;
-use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\ServiceProvider;
+use CustomD\EloquentAsyncKeys\EncryptionEngine;
+use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
 use CustomD\EloquentAsyncKeys\Exceptions\MaxLengthException;
-
-use CustomD\EloquentAsyncKeys\EncryptionEngine;
 
 class EloquentAsyncKeysTest extends TestCase
 {
@@ -73,7 +72,6 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     public function testKeyGeneration()
     {
-
         $rsa = EloquentAsyncKeys::create();
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', $rsa->getPrivateKey());
@@ -81,7 +79,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $data = 'abc123';
         $encrypted = $rsa->encrypt($data);
         $decrypted = $rsa->decrypt($encrypted);
-		$this->assertSame($data, $decrypted);
+        $this->assertSame($data, $decrypted);
     }
 
     public function testKeyPopulation()
@@ -131,45 +129,42 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $rsa->setKeys($this->publicKey, $this->privateKey, $this->password);
         $rsa->create(); // creates new keys, with the private key password-protected
 
-		$this->expectException(MaxLengthException::class);
-		$encrypted = $rsa->encrypt($data);
+        $this->expectException(MaxLengthException::class);
+        $encrypted = $rsa->encrypt($data);
+    }
 
-	}
+    //EncryptionEngine
+    public function testEncryptionEngineForLongerMessages()
+    {
+        $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
-	//EncryptionEngine
-	public function testEncryptionEngineForLongerMessages(){
-		$plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        // Setup our secured public / private keypair
+        $rsa = new Keys();
+        $rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
 
-		// Setup our secured public / private keypair
-		$rsa = new Keys();
-		$rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
+        $engine = new EncryptionEngine();
 
-		$engine = new EncryptionEngine();
+        $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
 
-		$encrypted = $engine->encrypt_message($plaintext, $rsa->getPublicKey());
+        $decrypted = $engine->decryptMessage($encrypted, $rsa->getDecryptedPrivateKey());
 
-		$decrypted = $engine->decrypt_message($encrypted, $rsa->getDecryptedPrivateKey());
+        $this->assertSame($plaintext, $decrypted);
+    }
 
-		$this->assertSame($plaintext, $decrypted);
+    public function testEncryptionEngineForLongerMessagesWithEncryptedKey()
+    {
+        $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
-	}
+        // Setup our secured public / private keypair
+        $rsa = new Keys();
+        $rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
 
+        $engine = new EncryptionEngine();
 
-	public function testEncryptionEngineForLongerMessagesWithEncryptedKey(){
-		$plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
 
-		// Setup our secured public / private keypair
-		$rsa = new Keys();
-		$rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
+        $decrypted = $engine->decryptMessage($encrypted, $rsa->getDecryptedPrivateKey());
 
-		$engine = new EncryptionEngine();
-
-		$encrypted = $engine->encrypt_message($plaintext, $rsa->getPublicKey());
-
-
-		$decrypted = $engine->decrypt_message($encrypted, $rsa->getDecryptedPrivateKey());
-
-		$this->assertSame($plaintext, $decrypted);
-
-	}
+        $this->assertSame($plaintext, $decrypted);
+    }
 }

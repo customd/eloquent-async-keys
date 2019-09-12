@@ -2,8 +2,6 @@
 
 namespace CustomD\EloquentAsyncKeys\Traits;
 
-
-
 trait Creator
 {
     /**
@@ -16,12 +14,11 @@ trait Creator
      */
     public function create($keySize = null, $overwrite = false): self
     {
-
         $keySize = $this->getKeySize($keySize);
 
         if (! $overwrite) {
             if ($this->keyFileExists($this->publicKey) || $this->keyFileExists($this->privateKey)) {
-                throw new Exception('OpenSSL: Existing keys found. Remove keys or pass $overwrite == true.');
+                throw new Exception('Existing keys found. Remove keys or pass $overwrite == true.');
             }
         }
 
@@ -33,7 +30,7 @@ trait Creator
         $this->setupPublicKey($resource);
         $this->setupPrivateKey($resource);
 
-		openssl_pkey_free($resource);
+        openssl_pkey_free($resource);
 
         return $this;
     }
@@ -81,7 +78,7 @@ trait Creator
         }
 
         if (strlen($privateKey) < 1 || $bytes !== strlen($privateKey)) {
-            throw new Exception('OpenSSL: Error writing PRIVATE key.');
+            throw new Exception('Error writing PRIVATE key.');
         }
     }
 }

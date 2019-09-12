@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class RsaKeystore extends Model
 {
-	//
-	protected $table = 'rsa_keystore';
+    //set our table name
+    protected $table = 'rsa_keystore';
 
-
-	public function user()
+    /**
+     * reference our User Model.
+     */
+    public function user()
     {
         return $this->hasOne(config('auth.providers.users.model'), 'rsa_keystore_id');
     }

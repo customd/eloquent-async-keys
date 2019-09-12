@@ -3,11 +3,12 @@
 namespace CustomD\EloquentAsyncKeys;
 
 use CustomD\EloquentAsyncKeys\Traits\Creator;
+use CustomD\EloquentAsyncKeys\Traits\Decrypt;
 use CustomD\EloquentAsyncKeys\Traits\Encrypt;
 
 class Keys
 {
-    use Encrypt, Creator;
+    use Decrypt, Encrypt, Creator;
 
     /**
      * Minimum key size bits.
@@ -125,31 +126,31 @@ class Keys
     public function getPrivateKey(): string
     {
         return $this->privateKey;
-	}
+    }
 
-	/**
+    /**
      * Get private key PEM to be used during encryption and decryption.
-	 *
-	 * @param bool $decrypt - decrypt encrypted private key or not
+     *
+     * @param bool $decrypt - decrypt encrypted private key or not
      *
      * @return resource Certificate private key string or stream path
      */
     public function getDecryptedPrivateKey()
     {
         return openssl_pkey_get_private($this->privateKey, $this->password);
-	}
-
+    }
 
     /**
      * Set password to be used during encryption and decryption.
      *
      * @param string $password Certificate password
-	 *
-	 * @return self
+     *
+     * @return self
      */
     public function setPassword($password): self
     {
-		$this->password = $password;
-		return $this;
+        $this->password = $password;
+
+        return $this;
     }
 }
