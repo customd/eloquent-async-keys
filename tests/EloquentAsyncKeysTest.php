@@ -10,6 +10,8 @@ use CustomD\EloquentAsyncKeys\ServiceProvider;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
 use CustomD\EloquentAsyncKeys\Exceptions\MaxLengthException;
 
+use CustomD\EloquentAsyncKeys\EncryptionEngine;
+
 class EloquentAsyncKeysTest extends TestCase
 {
     protected $publicKey = '
@@ -132,5 +134,42 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 		$this->expectException(MaxLengthException::class);
 		$encrypted = $rsa->encrypt($data);
 
-    }
+	}
+
+	//EncryptionEngine
+	public function testEncryptionEngineForLongerMessages(){
+		$plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+
+		// Setup our secured public / private keypair
+		$rsa = new Keys();
+		$rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
+
+		$engine = new EncryptionEngine();
+
+		$encrypted = $engine->encrypt_message($plaintext, $rsa->getPublicKey());
+
+		$decrypted = $engine->decrypt_message($encrypted, $rsa->getDecryptedPrivateKey());
+
+		$this->assertSame($plaintext, $decrypted);
+
+	}
+
+
+	public function testEncryptionEngineForLongerMessagesWithEncryptedKey(){
+		$plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+
+		// Setup our secured public / private keypair
+		$rsa = new Keys();
+		$rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
+
+		$engine = new EncryptionEngine();
+
+		$encrypted = $engine->encrypt_message($plaintext, $rsa->getPublicKey());
+
+
+		$decrypted = $engine->decrypt_message($encrypted, $rsa->getDecryptedPrivateKey());
+
+		$this->assertSame($plaintext, $decrypted);
+
+	}
 }

@@ -125,7 +125,20 @@ class Keys
     public function getPrivateKey(): string
     {
         return $this->privateKey;
-    }
+	}
+
+	/**
+     * Get private key PEM to be used during encryption and decryption.
+	 *
+	 * @param bool $decrypt - decrypt encrypted private key or not
+     *
+     * @return resource Certificate private key string or stream path
+     */
+    public function getDecryptedPrivateKey()
+    {
+        return openssl_pkey_get_private($this->privateKey, $this->password);
+	}
+
 
     /**
      * Set password to be used during encryption and decryption.

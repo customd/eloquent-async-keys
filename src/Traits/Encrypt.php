@@ -48,7 +48,13 @@ trait Encrypt
     {
 		$this->testIfStringIsToLong($data);
         return $encode ? base64_encode($this->_encrypt($data)) : $this->_encrypt($data);
-    }
+	}
+
+	public function encryptWithKey($publicKey, $data, $encode = false): string
+	{
+		$this->publicKey = $publicKey;
+		return $this->encrypt($data, $encode);
+	}
 
     /**
      * Decrypt data with provided private certificate.
@@ -90,6 +96,12 @@ trait Encrypt
     public function decrypt($data, $decode = false): string
     {
         return $this->_decrypt($decode ? base64_decode($data) : $data);
+	}
+
+	public function decryptWithKey($privateKey, $data, $decode = false): string
+	{
+		$this->privateKey = $privateKey;
+		return $this->decrypt($data, $decode);
 	}
 
 	/**
