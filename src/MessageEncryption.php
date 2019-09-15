@@ -11,7 +11,7 @@ class MessageEncryption
 
     protected $keyLen = 16;
 
-    public function encryptMessage($plainText, $publicKey, $key = null)
+    public function encryptMessage($plainText, $publicKey, $key = null): string
     {
         //generate our random "salt" which we will pass to decrypt
         if ($key === null) {
@@ -34,7 +34,7 @@ class MessageEncryption
         return $keyLength.$encryptedKey.$encrytedText;
     }
 
-    public function decryptMessage($encryptedMessage, $privateKey)
+    public function decryptMessage($encryptedMessage, $privateKey): string
     {
         // Extract the Symmetric Key
         $keylen = substr($encryptedMessage, 0, 3);
