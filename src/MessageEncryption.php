@@ -3,68 +3,35 @@
 namespace CustomD\EloquentAsyncKeys;
 
 use Illuminate\Encryption\Encrypter;
-use CustomD\EloquentModelEncrypt\Abstracts\Engine;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
 
-class EncryptionEngine extends Engine
+class MessageEncryption
 {
     protected $cipher = 'AES-128-CBC';
 
     protected $keyLen = 16;
 
-    /**
-     * Decrypt a value.
-     *
-     * @param string $value
-     *
-     * @return string
-     */
-    public function decrypt(string $value): ?string
-    {
-        if ($value) {
-            $value = \decrypt($value);
-        }
-
-        return $value;
-    }
-
-    /**
-     * Encrypt a value.
-     *
-     * @param string $value
-     *
-     * @return string
-     */
-    public function encrypt(string $value): ?string
-    {
-        if ($value) {
-            $value = \encrypt($value);
-        }
-
-        return $value;
-    }
-
-    public function encryptMessage($plainText, $publicKey, $salt = null)
+    public function encryptMessage($plainText, $publicKey, $key = null)
     {
         //generate our random "salt" which we will pass to decrypt
-        if ($salt === null) {
-            $salt = openssl_random_pseudo_bytes($this->keyLen);
+        if ($key === null) {
+            $key = \random_bytes($this->keyLen);
         }
 
-        //Encrypt using the salt above the original text - this we have no lenth limit on.
-        $encryptionEngine = new Encrypter($salt, $this->cipher);
+        //Encrypt using the key above the original text - this we have no lenth limit on.
+        $encryptionEngine = new Encrypter($key, $this->cipher);
         $encrytedText = $encryptionEngine->encrypt($plainText);
 
         // Now we get our symbolic key encrypted using the users public key
-        $encryptedSalt = EloquentAsyncKeys::encryptWithKey($publicKey, $salt, true);
+        $encryptedKey = EloquentAsyncKeys::encryptWithKey($publicKey, $key, true);
 
-        $encryptedStringLength = strlen($encryptedSalt); // Get the length of the encrypted string
+        $encryptedStringLength = strlen($encryptedKey); // Get the length of the encrypted string
 
         $keyLength = dechex($encryptedStringLength); // The first 3 bytes of the message are the key length
         $keyLength = str_pad($keyLength, 3, '0', STR_PAD_LEFT); // Zero pad to be sure.
 
         // Concatenate the length, the encrypted symmetric key, and the message
-        return $keyLength.$encryptedSalt.$encrytedText;
+        return $keyLength.$encryptedKey.$encrytedText;
     }
 
     public function decryptMessage($encryptedMessage, $privateKey)

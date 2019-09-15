@@ -2,6 +2,8 @@
 
 namespace CustomD\EloquentAsyncKeys\Traits;
 
+use CustomD\EloquentAsyncKeys\Exceptions\Exception;
+
 trait Creator
 {
     /**
@@ -18,7 +20,7 @@ trait Creator
 
         if (! $overwrite) {
             if ($this->keyFileExists($this->publicKey) || $this->keyFileExists($this->privateKey)) {
-                throw new Exception('Existing keys found. Remove keys or pass $overwrite == true.');
+                throw new Exception('Existing keys found. Remove keys or pass $overwrite == true / --overwrite .');
             }
         }
 

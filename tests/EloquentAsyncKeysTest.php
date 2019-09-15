@@ -6,7 +6,7 @@ use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase;
 use CustomD\EloquentAsyncKeys\Keys;
 use CustomD\EloquentAsyncKeys\ServiceProvider;
-use CustomD\EloquentAsyncKeys\EncryptionEngine;
+use CustomD\EloquentAsyncKeys\MessageEncryption;
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
 use CustomD\EloquentAsyncKeys\Exceptions\MaxLengthException;
@@ -134,7 +134,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
     }
 
     //EncryptionEngine
-    public function testEncryptionEngineForLongerMessages()
+    public function testMessageEncryptionForLongerMessages()
     {
         $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
@@ -142,7 +142,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $rsa = new Keys();
         $rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
 
-        $engine = new EncryptionEngine();
+        $engine = new MessageEncryption();
 
         $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
 
@@ -151,7 +151,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $this->assertSame($plaintext, $decrypted);
     }
 
-    public function testEncryptionEngineForLongerMessagesWithEncryptedKey()
+    public function testMessageEncryptionForLongerMessagesWithEncryptedKey()
     {
         $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
@@ -159,7 +159,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $rsa = new Keys();
         $rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
 
-        $engine = new EncryptionEngine();
+        $engine = new MessageEncryption();
 
         $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
 

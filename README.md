@@ -34,6 +34,7 @@ CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys::class,
 ```bash
 php artisan vendor:publish --provider="CustomD\EloquentAsyncKeys\ServiceProvider" --tag="config"
 php artisan migrate
+php artisan asynckey
 ```
 
 You will need to add a foreign key migration to your users table:

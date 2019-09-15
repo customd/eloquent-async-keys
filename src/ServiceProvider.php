@@ -2,6 +2,8 @@
 
 namespace CustomD\EloquentAsyncKeys;
 
+use CustomD\EloquentAsyncKeys\Console\Asynckey;
+
 class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     protected const CONFIG_PATH = __DIR__.'/../config/eloquent-async-keys.php';
@@ -28,5 +30,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         $this->app->bind('eloquent-async-keys', static function () {
             return new Keys();
         });
+
+        $this->app->singleton('command.asynckey', function () {
+            return new Asynckey();
+        });
+
+        $this->commands('command.asynckey');
     }
 }
