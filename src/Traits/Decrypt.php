@@ -20,7 +20,7 @@ trait Decrypt
         if ($this->privateKey === null) {
             throw new Exception('Unable to decrypt: No private key provided.');
         }
-        $privateKey = openssl_pkey_get_private($this->privateKey, $this->password);
+        $privateKey = openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
 
         if (! $privateKey) {
             throw new Exception('Unable to get private key for decryption. Does this key require a password??');
@@ -48,6 +48,15 @@ trait Decrypt
         return $this->_decrypt($decode ? base64_decode($data) : $data);
     }
 
+    /**
+     * Decrypts with a provided key.
+     *
+     * @param [type] $privateKey
+     * @param [type] $data
+     * @param bool $decode
+     *
+     * @return string
+     */
     public function decryptWithKey($privateKey, $data, $decode = false): string
     {
         $this->privateKey = $privateKey;

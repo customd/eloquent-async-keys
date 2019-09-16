@@ -9,6 +9,11 @@ class RsaKeystore extends Model
     //set our table name
     protected $table = 'rsa_keystore';
 
+    protected $fillable = [
+        'public_key',
+        'private_key',
+    ];
+
     /**
      * reference our User Model.
      */

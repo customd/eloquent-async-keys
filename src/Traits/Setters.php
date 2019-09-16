@@ -1,0 +1,85 @@
+<?php
+
+namespace CustomD\EloquentAsyncKeys\Traits;
+
+trait Setters
+{
+    /**
+     * Sets our current keys / passwords values.
+     *
+     * @param string $publicKey
+     * @param string $privateKey
+     * @param string $password
+     * @param string|bool $salt - set to true to generate a new random one
+     *
+     * @return self
+     */
+    public function setKeys($publicKey = null, $privateKey = null, $password = null, $salt = null): self
+    {
+        $this->setPublicKey($publicKey);
+        $this->setPrivateKey($privateKey);
+        $this->setPassword($password);
+        $this->setSalt($salt);
+
+        return $this;
+    }
+
+    /**
+     * set the current public key.
+     *
+     * @param string|null $publicKey
+     *
+     * @return self
+     */
+    public function setPublicKey(?string $publicKey = null): self
+    {
+        $this->publicKey = $this->fixKeyArgument($publicKey);
+
+        return $this;
+    }
+
+    /**
+     * sets the current private key.
+     *
+     * @param string|null $privateKey
+     *
+     * @return self
+     */
+    public function setPrivateKey(?string $privateKey = null): self
+    {
+        $this->privateKey = $this->fixKeyArgument($privateKey);
+
+        return $this;
+    }
+
+    /**
+     * Set password to be used during encryption and decryption.
+     *
+     * @param string|null $password Certificate password
+     *
+     * @return self
+     */
+    public function setPassword(?string $password = null): self
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * Set the salt / generate a new one / clear the salt.
+     *
+     * @param bool|string|null $salt
+     *
+     * @return self
+     */
+    public function setSalt($salt = null): self
+    {
+        if ($salt === true) {
+            $salt = bin2hex(random_bytes(16));
+        }
+        $this->salt = $salt;
+
+        return $this;
+    }
+}

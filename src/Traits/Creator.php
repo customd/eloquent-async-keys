@@ -70,7 +70,8 @@ trait Creator
     protected function setupPrivateKey($resource): void
     {
         $privateKey = '';
-        openssl_pkey_export($resource, $privateKey, $this->password);
+
+        openssl_pkey_export($resource, $privateKey, $this->saltedPassword());
 
         if (strpos($this->privateKey, 'file://') === 0) {
             $bytes = file_put_contents($this->privateKey, $privateKey);

@@ -5,10 +5,11 @@ namespace CustomD\EloquentAsyncKeys;
 use CustomD\EloquentAsyncKeys\Traits\Creator;
 use CustomD\EloquentAsyncKeys\Traits\Decrypt;
 use CustomD\EloquentAsyncKeys\Traits\Encrypt;
+use CustomD\EloquentAsyncKeys\Traits\Setters;
 
 class Keys
 {
-    use Decrypt, Encrypt, Creator;
+    use Setters, Creator, Encrypt, Decrypt;
 
     /**
      * Minimum key size bits.
@@ -42,19 +43,23 @@ class Keys
     protected $password;
 
     /**
-     * Sets our current keys / passwords values.
+     * Holds our key password Salt.
      *
-     * @param string $publicKey
-     * @param string $privateKey
-     * @param string $password
+     * @var  string|null
+     */
+    protected $salt = null;
+
+    /**
+     * Reset function to setup for new round of keys.
      *
      * @return self
      */
-    public function setKeys($publicKey = null, $privateKey = null, $password = null): self
+    public function reset(): self
     {
-        $this->publicKey = $this->fixKeyArgument($publicKey);
-        $this->privateKey = $this->fixKeyArgument($privateKey);
-        $this->password = $password;
+        $this->publicKey = null;
+        $this->privateKey = null;
+        $this->password = null;
+        $this->salt = null;
 
         return $this;
     }
@@ -113,7 +118,7 @@ class Keys
      *
      * @return string Certificate public key string or stream path
      */
-    public function getPublicKey(): string
+    public function getPublicKey(): ?string
     {
         return $this->publicKey;
     }
@@ -123,9 +128,19 @@ class Keys
      *
      * @return string Certificate private key string or stream path
      */
-    public function getPrivateKey(): string
+    public function getPrivateKey(): ?string
     {
         return $this->privateKey;
+    }
+
+    /**
+     * Get salt to be used during encryption and decryption.
+     *
+     * @return string|null Salt or null if not set.
+     */
+    public function getSalt(): ?string
+    {
+        return $this->salt;
     }
 
     /**
@@ -141,16 +156,13 @@ class Keys
     }
 
     /**
-     * Set password to be used during encryption and decryption.
+     * generates our salted password.
      *
-     * @param string $password Certificate password
-     *
-     * @return self
+     * @return string
      */
-    public function setPassword($password): self
+    protected function saltedPassword(): ?string
     {
-        $this->password = $password;
-
-        return $this;
+        // NIST recommendation is 10k iterations.
+        return $this->salt === null ? $this->password : hash_pbkdf2('sha256', $this->password, $this->salt, 10000, 50);
     }
 }
