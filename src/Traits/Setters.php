@@ -2,6 +2,8 @@
 
 namespace CustomD\EloquentAsyncKeys\Traits;
 
+use CustomD\EloquentAsyncKeys\Exceptions\Exception;
+
 trait Setters
 {
     /**
@@ -81,5 +83,32 @@ trait Setters
         $this->salt = $salt;
 
         return $this;
+    }
+
+    /**
+     * Method to set a new password onto the private key.
+     *
+     * @param string $newPassword
+     * @param bool|null|string $newSalt
+     */
+    public function setNewPassword(string $newPassword, $newSalt = false): void
+    {
+        $decryptedPrivateKey = $this->getDecryptedPrivateKey();
+
+        if (! $decryptedPrivateKey) {
+            throw new Exception('could not decrypt private key');
+        }
+
+        $this->setPassword($newPassword);
+
+        if ($newSalt !== false) {
+            $this->setSalt($newSalt);
+        }
+
+        if (openssl_pkey_export($decryptedPrivateKey, $privateKey, $this->saltedPassword()) === false) {
+            throw new Exception('Passphrase change failed: '.openssl_error_string());
+        }
+
+        $this->privateKey = $privateKey;
     }
 }

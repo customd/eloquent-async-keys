@@ -58,6 +58,8 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     protected $password = 'thisismysecurepassword';
 
+    protected $salt = 'thisisasalt';
+
     protected function getPackageProviders($app)
     {
         return [ServiceProvider::class];
@@ -72,7 +74,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     public function testKeyGeneration()
     {
-        $rsa = EloquentAsyncKeys::create();
+        $rsa = EloquentAsyncKeys::reset()->create();
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', $rsa->getPrivateKey());
 
@@ -82,9 +84,34 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $this->assertSame($data, $decrypted);
     }
 
+    public function testKeyGenerationWithPassword()
+    {
+        $rsa = EloquentAsyncKeys::reset()->setPassword($this->password)->create();
+        $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
+        $this->assertStringContainsString('-----BEGIN ENCRYPTED PRIVATE KEY-----', $rsa->getPrivateKey());
+
+        $data = 'abc123';
+        $encrypted = $rsa->encrypt($data);
+        $decrypted = $rsa->decrypt($encrypted);
+        $this->assertSame($data, $decrypted);
+    }
+
+    public function testKeyGenerationWithPasswordAndSalt()
+    {
+        $rsa = EloquentAsyncKeys::reset()->setPassword($this->password)->setSalt(true)->create();
+        $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
+        $this->assertStringContainsString('-----BEGIN ENCRYPTED PRIVATE KEY-----', $rsa->getPrivateKey());
+        $this->assertIsString($rsa->getSalt());
+
+        $data = 'abc123';
+        $encrypted = $rsa->encrypt($data);
+        $decrypted = $rsa->decrypt($encrypted);
+        $this->assertSame($data, $decrypted);
+    }
+
     public function testKeyPopulation()
     {
-        $rsa = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey);
+        $rsa = EloquentAsyncKeys::reset()->setKeys($this->publicKey, $this->privateKey);
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', ltrim($rsa->getPublicKey()));
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', ltrim($rsa->getPrivateKey()));
 
@@ -102,7 +129,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $decrypted = $rsa->decrypt($encrypted);
     }
 
-    public function testKeyPopulationPassworded()
+    public function testKeyPopulationWithPassword()
     {
         $rsa = new Keys();
         $rsa->setKeys($this->publicKey, $this->privateKey, $this->password);
@@ -120,6 +147,32 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         //this should now throw an exception as there is no password
         $this->expectException(Exception::class);
         $decrypted = $rsa2->decrypt($encrypted);
+    }
+
+    public function testKeyPopulationWithPasswordAndSalt()
+    {
+        $rsa = new Keys();
+        $rsa->setKeys($this->publicKey, $this->privateKey, $this->password, $this->salt);
+        $rsa->create(); // creates new keys, with the private key password-protected
+
+        $data = 'abc123';
+        $encrypted = $rsa->encrypt($data);
+        $decrypted = $rsa->decrypt($encrypted);
+        $this->assertSame($data, $decrypted);
+
+        $lockedKey = $rsa->getPrivateKey();
+
+        $rsa2 = new Keys();
+        $rsa2->setKeys($this->publicKey, $lockedKey, $this->password, $this->salt);
+        $decrypted = $rsa2->decrypt($encrypted);
+        $this->assertSame($data, $decrypted);
+
+        //this should now throw an exception as there is no salt provided
+        $this->expectException(Exception::class);
+        $rsa3 = new Keys();
+        $rsa3->setKeys($this->publicKey, $lockedKey, $this->password);
+        $decrypted = $rsa3->decrypt($encrypted);
+        $decrypted = $rsa3->decrypt($encrypted);
     }
 
     public function testLongerThanCanData()

@@ -152,7 +152,7 @@ class Keys
      */
     public function getDecryptedPrivateKey()
     {
-        return openssl_pkey_get_private($this->privateKey, $this->password);
+        return openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
     }
 
     /**
