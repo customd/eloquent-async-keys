@@ -7,7 +7,7 @@ use CustomD\EloquentAsyncKeys\Traits\Decrypt;
 use CustomD\EloquentAsyncKeys\Traits\Encrypt;
 use CustomD\EloquentAsyncKeys\Traits\Setters;
 
-class Keys
+class Keypair
 {
     use Setters, Creator, Encrypt, Decrypt;
 
@@ -48,6 +48,19 @@ class Keys
      * @var  string|null
      */
     protected $salt = null;
+
+    /**
+     * Constructor for our Keypair.
+     *
+     * @param string|null $publicKey
+     * @param string|null $privateKey
+     * @param string|null $password
+     * @param string|null $salt
+     */
+    public function __construct($publicKey = null, $privateKey = null, $password = null, $salt = null)
+    {
+        $this->setKeys($publicKey, $privateKey, $password, $salt);
+    }
 
     /**
      * Reset function to setup for new round of keys.
@@ -162,7 +175,11 @@ class Keys
      */
     protected function saltedPassword(): ?string
     {
+        if ($this->password === null) {
+            return null;
+        }
+        $salt = $this->salt === null ? sha1($this->password) : $this->salt;
         // NIST recommendation is 10k iterations.
-        return $this->salt === null ? $this->password : hash_pbkdf2('sha256', $this->password, $this->salt, 10000, 50);
+        return hash_pbkdf2('sha256', $this->password, $salt, 10000, 50);
     }
 }

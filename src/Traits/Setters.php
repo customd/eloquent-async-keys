@@ -18,6 +18,8 @@ trait Setters
      */
     public function setKeys($publicKey = null, $privateKey = null, $password = null, $salt = null): self
     {
+        $this->reset();
+
         $this->setPublicKey($publicKey);
         $this->setPrivateKey($privateKey);
         $this->setPassword($password);

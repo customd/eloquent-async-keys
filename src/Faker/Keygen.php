@@ -3,13 +3,13 @@
 namespace CustomD\EloquentAsyncKeys\Faker;
 
 use Faker\Provider\Internet;
-use CustomD\EloquentAsyncKeys\Keys;
+use CustomD\EloquentAsyncKeys\Keypair;
 
 class Keygen extends Internet
 {
     public function keygenCollection($password = null, $salt = null)
     {
-        $rsa = new Keys();
+        $rsa = new Keypair();
 
         if ($password === null) {
             $password = $this->generator->password();

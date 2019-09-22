@@ -28,7 +28,7 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         );
 
         $this->app->bind('eloquent-async-keys', static function () {
-            return new Keys();
+            return new Keypair();
         });
 
         $this->app->singleton('command.asynckey', function () {

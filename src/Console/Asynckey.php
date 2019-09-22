@@ -3,7 +3,7 @@
 namespace CustomD\EloquentAsyncKeys\Console;
 
 use Illuminate\Console\Command;
-use CustomD\EloquentAsyncKeys\Keys;
+use CustomD\EloquentAsyncKeys\Keypair;
 
 class Asynckey extends Command
 {
@@ -47,8 +47,7 @@ class Asynckey extends Command
 
         $overwrite = $this->option('overwrite');
 
-        $rsa = new Keys();
-        $rsa->setKeys($publicKey, $privateKey, $password);
+        $rsa = new Keypair($publicKey, $privateKey, $password);
 
         try {
             $rsa->create(null, $overwrite);

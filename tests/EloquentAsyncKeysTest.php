@@ -4,7 +4,7 @@ namespace CustomD\EloquentAsyncKeys\Tests;
 
 use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase;
-use CustomD\EloquentAsyncKeys\Keys;
+use CustomD\EloquentAsyncKeys\Keypair;
 use CustomD\EloquentAsyncKeys\ServiceProvider;
 use CustomD\EloquentAsyncKeys\MessageEncryption;
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
@@ -111,7 +111,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     public function testKeyPopulation()
     {
-        $rsa = EloquentAsyncKeys::reset()->setKeys($this->publicKey, $this->privateKey);
+        $rsa = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey);
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', ltrim($rsa->getPublicKey()));
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', ltrim($rsa->getPrivateKey()));
 
@@ -131,8 +131,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     public function testKeyPopulationWithPassword()
     {
-        $rsa = new Keys();
-        $rsa->setKeys($this->publicKey, $this->privateKey, $this->password);
+        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password);
         $rsa->create(); // creates new keys, with the private key password-protected
 
         $data = 'abc123';
@@ -141,8 +140,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
         $this->assertSame($data, $decrypted);
 
-        $rsa2 = new Keys();
-        $rsa->setKeys($this->publicKey, $this->privateKey);
+        $rsa2 = new Keypair($this->publicKey, $this->privateKey);
 
         //this should now throw an exception as there is no password
         $this->expectException(Exception::class);
@@ -151,8 +149,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     public function testKeyPopulationWithPasswordAndSalt()
     {
-        $rsa = new Keys();
-        $rsa->setKeys($this->publicKey, $this->privateKey, $this->password, $this->salt);
+        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password, $this->salt);
         $rsa->create(); // creates new keys, with the private key password-protected
 
         $data = 'abc123';
@@ -162,15 +159,13 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
         $lockedKey = $rsa->getPrivateKey();
 
-        $rsa2 = new Keys();
-        $rsa2->setKeys($this->publicKey, $lockedKey, $this->password, $this->salt);
+        $rsa2 = new Keypair($this->publicKey, $lockedKey, $this->password, $this->salt);
         $decrypted = $rsa2->decrypt($encrypted);
         $this->assertSame($data, $decrypted);
 
         //this should now throw an exception as there is no salt provided
         $this->expectException(Exception::class);
-        $rsa3 = new Keys();
-        $rsa3->setKeys($this->publicKey, $lockedKey, $this->password);
+        $rsa3 = new Keypair($this->publicKey, $lockedKey, $this->password);
         $decrypted = $rsa3->decrypt($encrypted);
         $decrypted = $rsa3->decrypt($encrypted);
     }
@@ -178,8 +173,7 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
     public function testLongerThanCanData()
     {
         $data = Str::random(255);
-        $rsa = new Keys();
-        $rsa->setKeys($this->publicKey, $this->privateKey, $this->password);
+        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password);
         $rsa->create(); // creates new keys, with the private key password-protected
 
         $this->expectException(MaxLengthException::class);
@@ -189,35 +183,35 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
     //EncryptionEngine
     public function testMessageEncryptionForLongerMessages()
     {
-        $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        $plainText = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
         // Setup our secured public / private keypair
-        $rsa = new Keys();
+        $rsa = new Keypair();
         $rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
 
-        $engine = new MessageEncryption();
+        $engine = new MessageEncryption($rsa->getPublicKey(), $rsa->getDecryptedPrivateKey());
 
-        $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
+        $encrypted = $engine->encrypt($plainText);
 
-        $decrypted = $engine->decryptMessage($encrypted, $rsa->getDecryptedPrivateKey());
+        $decrypted = $engine->decrypt($encrypted);
 
-        $this->assertSame($plaintext, $decrypted);
+        $this->assertSame($plainText, $decrypted);
     }
 
     public function testMessageEncryptionForLongerMessagesWithEncryptedKey()
     {
-        $plaintext = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        $plainText = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
 
         // Setup our secured public / private keypair
-        $rsa = new Keys();
+        $rsa = new Keypair();
         $rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
 
-        $engine = new MessageEncryption();
+        $engine = new MessageEncryption($rsa->getPublicKey(), $rsa->getDecryptedPrivateKey());
 
-        $encrypted = $engine->encryptMessage($plaintext, $rsa->getPublicKey());
+        $encrypted = $engine->encrypt($plainText);
 
-        $decrypted = $engine->decryptMessage($encrypted, $rsa->getDecryptedPrivateKey());
+        $decrypted = $engine->decrypt($encrypted);
 
-        $this->assertSame($plaintext, $decrypted);
+        $this->assertSame($plainText, $decrypted);
     }
 }
