@@ -9,7 +9,10 @@ use CustomD\EloquentAsyncKeys\Traits\Setters;
 
 class Keypair
 {
-    use Setters, Creator, Encrypt, Decrypt;
+	use Setters;
+	use Creator;
+	use Encrypt;
+	use Decrypt;
 
     /**
      * Minimum key size bits.
