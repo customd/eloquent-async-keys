@@ -42,8 +42,8 @@ class Asynckey extends Command
             throw new \Exception('Application Key required');
         }
 
-        $publicKey = storage_path().'/_certs/public.key';
-        $privateKey = storage_path().'/_certs/private.key';
+        $publicKey = storage_path() . '/_certs/public.key';
+        $privateKey = storage_path() . '/_certs/private.key';
 
         $overwrite = $this->option('overwrite');
 
@@ -61,8 +61,8 @@ class Asynckey extends Command
      */
     protected function confirmDirectory()
     {
-        if (! is_dir(\storage_path().'/_certs')) {
-            mkdir(\storage_path().'/_certs', 0770, true);
+        if (! is_dir(\storage_path() . '/_certs')) {
+            mkdir(\storage_path() . '/_certs', 0770, true);
         }
     }
 }

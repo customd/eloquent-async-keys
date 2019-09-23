@@ -108,7 +108,7 @@ trait Setters
         }
 
         if (openssl_pkey_export($decryptedPrivateKey, $privateKey, $this->saltedPassword()) === false) {
-            throw new Exception('Passphrase change failed: '.openssl_error_string());
+            throw new Exception('Passphrase change failed: ' . openssl_error_string());
         }
 
         $this->privateKey = $privateKey;

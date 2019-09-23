@@ -16,7 +16,7 @@ trait Encrypt
      *
      * @return string Encrypted data
      */
-    protected function _encrypt($data): string
+    protected function performEncryption($data): string
     {
         // Load public key
         $publicKey = openssl_pkey_get_public($this->publicKey);
@@ -47,7 +47,7 @@ trait Encrypt
     {
         $this->testIfStringIsToLong($data);
 
-        return $encode ? base64_encode($this->_encrypt($data)) : $this->_encrypt($data);
+        return $encode ? base64_encode($this->performEncryption($data)) : $this->performEncryption($data);
     }
 
     public function encryptWithKey($publicKey, $data, $encode = false): string
@@ -68,7 +68,7 @@ trait Encrypt
         $maxlen = ($keylength / 8) - 11;
 
         if (strlen($string) >= $maxlen) {
-            throw new MaxLengthException('Encryption can be a maximum of '.$maxlen.' bytes');
+            throw new MaxLengthException('Encryption can be a maximum of ' . $maxlen . ' bytes');
         }
     }
 }

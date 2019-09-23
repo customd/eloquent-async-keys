@@ -48,7 +48,7 @@ class MessageEncryption
         $keyLength = str_pad($keyLength, 3, '0', STR_PAD_LEFT); // Zero pad to be sure.
 
         // Concatenate the length, the encrypted symmetric key, and the message
-        return $keyLength.$encryptedKey.$ciphertext;
+        return $keyLength . $encryptedKey . $ciphertext;
     }
 
     public function decrypt($encryptedMessage): string

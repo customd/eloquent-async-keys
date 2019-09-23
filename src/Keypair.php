@@ -90,7 +90,7 @@ class Keypair
 
         if (strpos($keyFile, '/') === 0) {
             // This looks like a path, let us prepend the file scheme
-            return 'file://'.$keyFile;
+            return 'file://' . $keyFile;
         }
 
         return $keyFile;

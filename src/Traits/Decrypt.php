@@ -15,7 +15,7 @@ trait Decrypt
      *
      * @return string Decrypted data
      */
-    protected function _decrypt($data): string
+    protected function performDecryption($data): string
     {
         if ($this->privateKey === null) {
             throw new Exception('Unable to decrypt: No private key provided.');
@@ -45,7 +45,7 @@ trait Decrypt
      */
     public function decrypt($data, $decode = false): string
     {
-        return $this->_decrypt($decode ? base64_decode($data) : $data);
+        return $this->performDecryption($decode ? base64_decode($data) : $data);
     }
 
     /**
