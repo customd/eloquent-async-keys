@@ -91,7 +91,7 @@ trait Setters
      * Method to set a new password onto the private key.
      *
      * @param string $newPassword
-     * @param bool|null|string $newSalt
+     * @param bool|string|null $newSalt
      */
     public function setNewPassword(string $newPassword, $newSalt = false): void
     {

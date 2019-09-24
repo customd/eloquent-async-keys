@@ -168,7 +168,10 @@ class Keypair
      */
     public function getDecryptedPrivateKey()
     {
-        return openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
+        $privKey = openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
+        openssl_pkey_export($privKey, $return);
+
+        return $return;
     }
 
     /**
