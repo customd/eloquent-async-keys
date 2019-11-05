@@ -52,6 +52,10 @@ class Keypair
      */
     protected $salt = null;
 
+    protected $versions = [];
+
+    protected $version = null;
+
     /**
      * Constructor for our Keypair.
      *
@@ -60,9 +64,42 @@ class Keypair
      * @param string|null $password
      * @param string|null $salt
      */
-    public function __construct($publicKey = null, $privateKey = null, $password = null, $salt = null)
+    public function __construct(array $config, $publicKey = null, $privateKey = null, $password = null, $salt = null)
     {
+        $this->setConfig($config);
         $this->setKeys($publicKey, $privateKey, $password, $salt);
+    }
+
+    public function setConfig($config)
+    {
+        $this->versions = $config['versions'];
+        $this->version = $config['default'];
+    }
+
+    public function getVersion($version = null)
+    {
+        if ($version === null) {
+            $version = $this->version;
+        }
+
+        if (! isset($this->versions[$version])) {
+            end($this->versions);
+            $version = key($this->versions);
+        }
+
+        return $version;
+    }
+
+    public function generateIV($version)
+    {
+        $cipher = $this->versions[$version];
+        $len = openssl_cipher_iv_length($cipher);
+
+        if ((int) $len === 0) {
+            return;
+        }
+
+        return \random_bytes($len);
     }
 
     /**
