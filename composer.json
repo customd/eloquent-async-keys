@@ -43,7 +43,10 @@
     "laravel": {
       "providers": [
         "CustomD\\EloquentAsyncKeys\\ServiceProvider"
-      ]
+	  ],
+	  "aliases": {
+		"EloquentAsyncKeys": "CustomD\\EloquentAsyncKeys\\Facades\\EloquentAsyncKeys"
+		}
     }
   },
   "config": {
