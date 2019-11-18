@@ -107,8 +107,10 @@ trait Setters
      *
      * @param string $newPassword
      * @param bool|string|null $newSalt
+     *
+     * @return self
      */
-    public function setNewPassword(string $newPassword, $newSalt = false): void
+    public function setNewPassword(string $newPassword, $newSalt = false): self
     {
         $decryptedPrivateKey = $this->getDecryptedPrivateKey();
 
