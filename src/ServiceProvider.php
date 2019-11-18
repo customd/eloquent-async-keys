@@ -22,11 +22,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             'eloquent-async-keys'
         );
 
-        $this->app->singleton('eloquent-async-keys', static function ($app, $params) {
+        $this->app->singleton('eloquent-async-keys', static function ($app) {
             return new Keypair($app['config']['eloquent-async-keys']);
         });
 
-        $this->app->singleton('command.asynckey', function () {
+        $this->app->singleton('command.asynckey', static function () {
             return new Asynckey();
         });
 

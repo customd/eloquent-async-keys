@@ -23,7 +23,7 @@ trait Encrypt
         $algorithmIv = $this->generateIV($encryptionVersion);
         $algorithm = $this->versions[$encryptionVersion];
 
-        $publicKeys = array_map(function ($publicKey) {
+        $publicKeys = array_map(static function ($publicKey) {
             $key = openssl_pkey_get_public($publicKey);
 
             if (! $key) {
@@ -68,7 +68,6 @@ trait Encrypt
      */
     public function encrypt($data, $version = null): array
     {
-        // $this->testIfStringIsToLong($data);
 
         return $this->performEncryption($data, $version);
     }

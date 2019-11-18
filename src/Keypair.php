@@ -59,6 +59,7 @@ class Keypair
     /**
      * Constructor for our Keypair.
      *
+     * @param array        $config
      * @param string|null $publicKey
      * @param string|null $privateKey
      * @param string|null $password
@@ -70,12 +71,13 @@ class Keypair
         $this->setKeys($publicKey, $privateKey, $password, $salt);
     }
 
-    public function setConfig($config)
-    {
-        $this->versions = $config['versions'];
-        $this->version = $config['default'];
-    }
-
+    /**
+     * gets the current version
+     *
+     * @param mixed $version
+     *
+     * @return mixed
+     */
     public function getVersion($version = null)
     {
         if ($version === null) {
@@ -90,13 +92,20 @@ class Keypair
         return $version;
     }
 
-    public function generateIV($version)
+    /**
+     * generates a new IV string
+     *
+     * @param mixed $version
+     *
+     * @return string
+     */
+    public function generateIV($version): string
     {
         $cipher = $this->versions[$version];
         $len = openssl_cipher_iv_length($cipher);
 
         if ((int) $len === 0) {
-            return;
+            return '';
         }
 
         return \random_bytes($len);
@@ -201,7 +210,7 @@ class Keypair
      *
      * @param bool $decrypt - decrypt encrypted private key or not
      *
-     * @return resource Certificate private key string or stream path
+     * @return string Certificate private key string
      */
     public function getDecryptedPrivateKey()
     {
