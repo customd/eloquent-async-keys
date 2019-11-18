@@ -127,5 +127,7 @@ trait Setters
         }
 
         $this->privateKey = $privateKey;
+
+        return $this;
     }
 }
