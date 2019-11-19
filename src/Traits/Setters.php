@@ -6,6 +6,21 @@ use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 
 trait Setters
 {
+
+    /**
+     * sets the config versions
+     *
+     * @param array $config
+     *
+     * @return void
+     */
+    public function setConfig(array $config): self
+    {
+        $this->versions = $config['versions'];
+        $this->version = $config['default'];
+        return $this;
+    }
+
     /**
      * Sets our current keys / passwords values.
      *
@@ -92,8 +107,10 @@ trait Setters
      *
      * @param string $newPassword
      * @param bool|string|null $newSalt
+     *
+     * @return self
      */
-    public function setNewPassword(string $newPassword, $newSalt = false): void
+    public function setNewPassword(string $newPassword, $newSalt = false): self
     {
         $decryptedPrivateKey = $this->getDecryptedPrivateKey();
 
@@ -112,5 +129,7 @@ trait Setters
         }
 
         $this->privateKey = $privateKey;
+
+        return $this;
     }
 }
