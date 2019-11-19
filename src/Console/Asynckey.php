@@ -47,7 +47,7 @@ class Asynckey extends Command
 
         $overwrite = $this->option('overwrite');
 
-        $rsa = new Keypair($publicKey, $privateKey, $password);
+        $rsa = new Keypair(config('eloquent-async-keys'),$publicKey, $privateKey, $password);
 
         try {
             $rsa->create(null, $overwrite);
