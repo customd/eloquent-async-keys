@@ -4,12 +4,9 @@ namespace CustomD\EloquentAsyncKeys\Tests;
 
 use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase;
-use CustomD\EloquentAsyncKeys\Keypair;
 use CustomD\EloquentAsyncKeys\ServiceProvider;
-use CustomD\EloquentAsyncKeys\MessageEncryption;
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
-use CustomD\EloquentAsyncKeys\Exceptions\MaxLengthException;
 
 class EloquentAsyncKeysTest extends TestCase
 {
@@ -60,6 +57,12 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
 
     protected $salt = 'thisisasalt';
 
+    protected $versions = [
+        'AES128' => 'AES128',
+        'AES192' => 'AES192',
+        'AES256' => 'AES256',
+    ];
+
     protected function getPackageProviders($app)
     {
         return [ServiceProvider::class];
@@ -78,35 +81,51 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', $rsa->getPrivateKey());
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
+
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
     }
 
     public function testKeyGenerationWithPassword()
     {
-        $rsa = EloquentAsyncKeys::reset()->setPassword($this->password)->create();
+        $rsa = EloquentAsyncKeys::setPassword($this->password)->create();
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
         $this->assertStringContainsString('-----BEGIN ENCRYPTED PRIVATE KEY-----', $rsa->getPrivateKey());
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
+
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
     }
 
     public function testKeyGenerationWithPasswordAndSalt()
     {
-        $rsa = EloquentAsyncKeys::reset()->setPassword($this->password)->setSalt(true)->create();
+        $rsa = EloquentAsyncKeys::setPassword($this->password)->setSalt(true)->create();
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', $rsa->getPublicKey());
         $this->assertStringContainsString('-----BEGIN ENCRYPTED PRIVATE KEY-----', $rsa->getPrivateKey());
         $this->assertIsString($rsa->getSalt());
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
+
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
     }
 
     public function testKeyPopulation()
@@ -115,103 +134,177 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
         $this->assertStringContainsString('-----BEGIN PUBLIC KEY-----', ltrim($rsa->getPublicKey()));
         $this->assertStringContainsString('-----BEGIN PRIVATE KEY-----', ltrim($rsa->getPrivateKey()));
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data, true);
-        $decrypted = $rsa->decrypt($encrypted, true);
-        $this->assertSame($data, $decrypted);
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
 
         $this->expectException(Exception::class);
-        $decrypted = $rsa->decrypt($encrypted);
+        $decrypted = $rsa->decrypt($cipherText, false);
     }
 
     public function testKeyPopulationWithPassword()
     {
-        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password);
+        $rsa = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey, $this->password);
         $rsa->create(); // creates new keys, with the private key password-protected
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
 
-        $this->assertSame($data, $decrypted);
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
 
-        $rsa2 = new Keypair($this->publicKey, $this->privateKey);
+        $rsa2 = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey);
 
         //this should now throw an exception as there is no password
         $this->expectException(Exception::class);
-        $decrypted = $rsa2->decrypt($encrypted);
+        $decrypted = $rsa2->decrypt($cipherText, $key);
     }
 
     public function testKeyPopulationWithPasswordAndSalt()
     {
-        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password, $this->salt);
+        $rsa = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey, $this->password, $this->salt);
         $rsa->create(); // creates new keys, with the private key password-protected
 
-        $data = 'abc123';
-        $encrypted = $rsa->encrypt($data);
-        $decrypted = $rsa->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $plainText = Str::random(150);
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
+
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
 
         $lockedKey = $rsa->getPrivateKey();
 
-        $rsa2 = new Keypair($this->publicKey, $lockedKey, $this->password, $this->salt);
-        $decrypted = $rsa2->decrypt($encrypted);
-        $this->assertSame($data, $decrypted);
+        $rsa2 = EloquentAsyncKeys::setKeys($this->publicKey, $lockedKey, $this->password, $this->salt);
+        $decrypted = $rsa2->decrypt($cipherText, $key);
+        $this->assertSame($plainText, $decrypted);
 
         //this should now throw an exception as there is no salt provided
         $this->expectException(Exception::class);
-        $rsa3 = new Keypair($this->publicKey, $lockedKey, $this->password);
-        $decrypted = $rsa3->decrypt($encrypted);
-        $decrypted = $rsa3->decrypt($encrypted);
-    }
-
-    public function testLongerThanCanData()
-    {
-        $data = Str::random(255);
-        $rsa = new Keypair($this->publicKey, $this->privateKey, $this->password);
-        $rsa->create(); // creates new keys, with the private key password-protected
-
-        $this->expectException(MaxLengthException::class);
-        $encrypted = $rsa->encrypt($data);
+        $rsa3 = EloquentAsyncKeys::setKeys($this->publicKey, $lockedKey, $this->password);
+        $decrypted = $rsa3->decrypt($cipherText, $key);
     }
 
     //EncryptionEngine
     public function testMessageEncryptionForLongerMessages()
     {
-        $plainText = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        // 100,000 chars should be a good test chars message...
+        // It's too long to deal with under openssl standards!!!
+        $plainText = Str::random(100000);
 
         // Setup our secured public / private keypair
-        $rsa = new Keypair();
-        $rsa->setPassword(null)->create(); // creates new keys, with the private key password-protected
+        $rsa = EloquentAsyncKeys::create(); // creates new keys, with the private key password-protected
 
-        $engine = new MessageEncryption($rsa->getPublicKey(), $rsa->getDecryptedPrivateKey());
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
 
-        $encrypted = $engine->encrypt($plainText);
-
-        $decrypted = $engine->decrypt($encrypted);
-
-        $this->assertSame($plainText, $decrypted);
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
     }
 
     public function testMessageEncryptionForLongerMessagesWithEncryptedKey()
     {
-        $plainText = Str::random(5990); //500 chars message - to long to deal with under openssl standards!!!
+        // 100,000 chars should be a good test chars message...
+        // It's too long to deal with under openssl standards!!!
+        $plainText = Str::random(100000);
 
         // Setup our secured public / private keypair
-        $rsa = new Keypair();
-        $rsa->setPassword($this->password)->create(); // creates new keys, with the private key password-protected
+        // creates new keys, with the private key password-protected
+        $rsa = EloquentAsyncKeys::setPassword($this->password)->create();
 
-        $engine = new MessageEncryption($rsa->getPublicKey(), $rsa->getDecryptedPrivateKey());
+        foreach ($this->versions as $version => $algo) {
+            $encrypted = $rsa->encrypt($plainText, $version);
+            $cipherText = $encrypted['cipherText'];
+            $key = $encrypted['keys'][0];
 
-        $encrypted = $engine->encrypt($plainText);
+            $decrypted = $rsa->decrypt($cipherText, $key);
+            $this->assertSame($plainText, $decrypted);
+        }
+    }
 
-        $decrypted = $engine->decrypt($encrypted);
+    public function testShouldMatchConfigVars()
+    {
+        $config = app('config')['eloquent-async-keys'];
+        $plainText = Str::random(10);
+        $rsa = EloquentAsyncKeys::create(); // creates new keys, with the private key password-protected
+        $encrypted = $rsa->encrypt($plainText);
+        $cipherText = $encrypted['cipherText'];
+        ['cipherText' => $cipherText, 'version' => $version, 'iv' => $iv] = $rsa->parseCipherData($cipherText);
 
-        $this->assertSame($plainText, $decrypted);
+        $this->assertSame((string) $version, (string) $config['default']);
+    }
+
+    public function testMultipleKeys()
+    {
+        $keys = [];
+        $privates = [];
+        for ($i = 1; $i < 20; $i += 2) {
+            $key = EloquentAsyncKeys::reset()->create();
+            $keys[$i] = $key->getPublicKey();
+            $privates[$i] = $key->getDecryptedPrivateKey();
+        }
+
+        $plainText = Str::random(10);
+
+        $encrypted = EloquentAsyncKeys::encryptWithKey($keys, $plainText);
+
+        $cipherText = $encrypted['cipherText'];
+        $cipherKeys = $encrypted['keys'];
+
+        foreach ($privates as $uid => $privateKey) {
+            $res = EloquentAsyncKeys::setPrivateKey($privateKey)->decrypt($cipherText, $cipherKeys[$uid]);
+            $this->assertSame((string) $res, (string) $plainText);
+        }
+    }
+
+    public function testMultipleKeysPreset()
+    {
+        $keys = [];
+        $privates = [];
+
+        $key = EloquentAsyncKeys::setKeys($this->publicKey, $this->privateKey);
+
+        for ($i = 1; $i < 20; $i += 2) {
+            $keys[$i] = $key->getPublicKey();
+            $privates[$i] = $key->getDecryptedPrivateKey();
+        }
+
+        $plainText = Str::random(10);
+
+        $encrypted = EloquentAsyncKeys::encryptWithKey($keys, $plainText);
+
+        $cipherText = $encrypted['cipherText'];
+        $cipherKeys = $encrypted['keys'];
+
+        foreach ($privates as $uid => $privateKey) {
+            $res = EloquentAsyncKeys::setPrivateKey($privateKey)->decrypt($cipherText, $cipherKeys[$uid]);
+            $this->assertSame((string) $res, (string) $plainText);
+        }
+    }
+
+    public function testHiLoad()
+    {
+        for ($i = 0; $i < 100; $i++) {
+            try {
+                $this->testMultipleKeysPreset();
+            } catch (\Exception $e) {
+                dd($e);
+            }
+        }
     }
 }

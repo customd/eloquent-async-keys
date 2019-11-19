@@ -14,47 +14,80 @@ trait Encrypt
      *
      * @throws Exception
      *
-     * @return string Encrypted data
+     * @return array Encrypted data
      */
-    protected function performEncryption($data): string
+    protected function performEncryption($data, $version = null): array
     {
-        // Load public key
-        $publicKey = openssl_pkey_get_public($this->publicKey);
+        $encryptionVersion = $this->getVersion($version);
 
-        if (! $publicKey) {
-            throw new Exception('Unable to get public key for encryption.');
+        $algorithmIv = $this->generateIV($encryptionVersion);
+        $algorithm = $this->versions[$encryptionVersion];
+
+        $publicKeys = array_map(static function ($publicKey) {
+            $key = openssl_pkey_get_public($publicKey);
+
+            if (! $key) {
+                throw new Exception('Unable to get public key for encryption.');
+            }
+
+            return $key;
+        }, (array) $this->publicKey);
+
+        $encryptedData = null;
+        $envelopeKeys = [];
+        $mappedKeys = [];
+
+        if (openssl_seal($data, $encryptedData, $envelopeKeys, $publicKeys, $algorithm, $algorithmIv)) {
+            $i = 0;
+            // Ensure each shareKey is labelled with its corresponding key id
+            foreach ($publicKeys as $keyId => $publicKey) {
+                $mappedKeys[$keyId] = base64_encode($envelopeKeys[$i]);
+                openssl_free_key($publicKey);
+                $i++;
+            }
+
+            return [
+                'keys' => $mappedKeys,
+                'cipherText' => base64_encode($encryptedData)
+                    . ':'
+                    . base64_encode($encryptionVersion)
+                    . ':'
+                    . base64_encode($algorithmIv),
+            ];
         }
 
-        $success = openssl_public_encrypt($data, $encryptedData, $publicKey);
-        openssl_free_key($publicKey);
-
-        if (! $success) {
-            throw new Exception('Encryption failed. Ensure you are using a PUBLIC key.');
-        }
-
-        return $encryptedData;
+        throw new Exception('Encryption failed ' . openssl_error_string());
     }
 
     /**
      * Encrypt data and then optionallay base64_encode it.
      *
      * @param string $data Data to encrypt
-     * @param bool $encode Base64 Encode the encrypted result
      *
-     * @return string Base64-encrypted data
+     * @return array Base64-encrypted data
      */
-    public function encrypt($data, $encode = false): string
+    public function encrypt($data, $version = null): array
     {
-        $this->testIfStringIsToLong($data);
 
-        return $encode ? base64_encode($this->performEncryption($data)) : $this->performEncryption($data);
+        return $this->performEncryption($data, $version);
     }
 
-    public function encryptWithKey($publicKey, $data, $encode = false): string
+    /**
+     * Encrypts the data with a supplied key.
+     *
+     * @param string|array $publicKey
+     * @param string $data
+     *
+     * @return array
+     */
+    public function encryptWithKey($publicKey, $data, $version = null): array
     {
-        $this->publicKey = $publicKey;
+        $this->publicKey = [];
+        foreach ((array) $publicKey as $keyId => $key) {
+            $this->publicKey[$keyId] = $this->fixKeyArgument($key);
+        }
 
-        return $this->encrypt($data, $encode);
+        return $this->encrypt($data, $version);
     }
 
     /**

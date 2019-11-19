@@ -6,6 +6,17 @@ use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 
 trait Decrypt
 {
+    public function parseCipherData($cipherData)
+    {
+        $cipherParts = explode(':', $cipherData);
+
+        return [
+            'cipherText' => base64_decode($cipherParts[0]),
+            'version' => base64_decode($cipherParts[1]),
+            'iv' => base64_decode($cipherParts[2]),
+        ];
+    }
+
     /**
      * Decrypt data with provided private certificate.
      *
@@ -15,24 +26,35 @@ trait Decrypt
      *
      * @return string Decrypted data
      */
-    protected function performDecryption($data): string
+    protected function performDecryption($cipherData, $key): string
     {
         if ($this->privateKey === null) {
             throw new Exception('Unable to decrypt: No private key provided.');
         }
+        $decryptedData = null;
+
         $privateKey = openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
 
         if (! $privateKey) {
             throw new Exception('Unable to get private key for decryption. Does this key require a password??');
         }
-        $success = openssl_private_decrypt($data, $decryptedData, $privateKey);
-        openssl_free_key($privateKey);
 
-        if (! $success) {
-            throw new Exception('Decryption failed. Ensure you are using (1) a PRIVATE key, and (2) the correct one.');
+        [
+            'cipherText' => $cipherText,
+            'version' => $version,
+            'iv' => $algorithmIv
+        ] = $this->parseCipherData($cipherData);
+
+        $encryptionVersion = $this->getVersion($version);
+        $algorithm = $this->versions[$encryptionVersion];
+
+        if (openssl_open($cipherText, $decryptedData, base64_decode($key), $privateKey, $algorithm, $algorithmIv)) {
+            openssl_free_key($privateKey);
+
+            return $decryptedData;
         }
 
-        return $decryptedData;
+        throw new Exception('Decryption failed. Ensure you are using (1) a PRIVATE key, and (2) the correct one.');
     }
 
     /**
@@ -43,9 +65,9 @@ trait Decrypt
      *
      * @return string Decrypted data
      */
-    public function decrypt($data, $decode = false): string
+    public function decrypt($cipherText, $key = null): string
     {
-        return $this->performDecryption($decode ? base64_decode($data) : $data);
+        return $this->performDecryption($cipherText, $key);
     }
 
     /**
@@ -57,10 +79,10 @@ trait Decrypt
      *
      * @return string
      */
-    public function decryptWithKey($privateKey, $data, $decode = false): string
+    public function decryptWithKey($privateKey, $data, $key = null): string
     {
         $this->privateKey = $privateKey;
 
-        return $this->decrypt($data, $decode);
+        return $this->decrypt($data, $key);
     }
 }

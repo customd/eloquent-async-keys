@@ -8,16 +8,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     protected const CONFIG_PATH = __DIR__ . '/../config/eloquent-async-keys.php';
 
-    protected const MIGRATIONS_PATH = __DIR__ . '/../database/migrations/';
-
     public function boot()
     {
         $this->publishes([
             self::CONFIG_PATH => config_path('eloquent-async-keys.php'),
         ], 'config');
-
-        //set our migratinos directory
-        $this->loadMigrationsFrom(self::MIGRATIONS_PATH);
     }
 
     public function register()
@@ -27,11 +22,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
             'eloquent-async-keys'
         );
 
-        $this->app->bind('eloquent-async-keys', static function () {
-            return new Keypair();
+        $this->app->singleton('eloquent-async-keys', static function ($app) {
+            return new Keypair($app['config']['eloquent-async-keys']);
         });
 
-        $this->app->singleton('command.asynckey', function () {
+        $this->app->singleton('command.asynckey', static function () {
             return new Asynckey();
         });
 
