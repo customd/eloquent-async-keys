@@ -4,6 +4,7 @@ namespace CustomD\EloquentAsyncKeys\Traits;
 
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\Exceptions\MaxLengthException;
+use Illuminate\Support\Facades\Log;
 
 trait Encrypt
 {
@@ -23,21 +24,19 @@ trait Encrypt
         $algorithmIv = $this->generateIV($encryptionVersion);
         $algorithm = $this->versions[$encryptionVersion];
 
-        $publicKeys = array_map(static function ($publicKey) {
-            $key = openssl_pkey_get_public($publicKey);
-
-            if (! $key) {
-                throw new Exception('Unable to get public key for encryption.');
-            }
-
-            return $key;
-        }, (array) $this->publicKey);
+         $publicKeys = collect($this->publicKey)->map(function($publicKey, $id) {
+              $key = openssl_pkey_get_public($publicKey);
+              if(!$key){
+                Log::critical('Public key id: [' . $id . '] Is invalid');
+              }
+              return $key;
+        })->filter();
 
         $encryptedData = null;
         $envelopeKeys = [];
         $mappedKeys = [];
 
-        if (openssl_seal($data, $encryptedData, $envelopeKeys, $publicKeys, $algorithm, $algorithmIv)) {
+        if (openssl_seal($data, $encryptedData, $envelopeKeys, $publicKeys->toArray(), $algorithm, $algorithmIv)) {
             $i = 0;
             // Ensure each shareKey is labelled with its corresponding key id
             foreach ($publicKeys as $keyId => $publicKey) {

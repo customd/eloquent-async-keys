@@ -6,6 +6,7 @@ use CustomD\EloquentAsyncKeys\Traits\Creator;
 use CustomD\EloquentAsyncKeys\Traits\Decrypt;
 use CustomD\EloquentAsyncKeys\Traits\Encrypt;
 use CustomD\EloquentAsyncKeys\Traits\Setters;
+use CustomD\EloquentAsyncKeys\Exceptions\InvalidKeysException;
 
 class Keypair
 {
@@ -233,5 +234,28 @@ class Keypair
         $salt = $this->salt === null ? sha1($this->password) : $this->salt;
         // NIST recommendation is 10k iterations.
         return hash_pbkdf2('sha256', $this->password, $salt, 10000, 50);
+    }
+
+    /**
+     * Method that checks through 1 or more public keys are valid and throw an exception if any are broken.
+     *
+     * @throws InvalidKeysException
+     */
+    public function checkPublicKey($publicKey): void
+    {
+         $invalidKeys = collect($publicKey)->map(function($publicKey, $id) {
+              $key = openssl_pkey_get_public($publicKey);
+              if(!$key){
+                return $id;
+              }
+              return null;
+        })->filter();
+
+        if($invalidKeys->isNotEmpty()){
+            $exception = new InvalidKeysException('The following public keys are invalid');
+            $exception->setKeys($invalidKeys->toArray());
+            throw $exception;
+        }
+
     }
 }
