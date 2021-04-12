@@ -209,13 +209,14 @@ class Keypair
     /**
      * Get private key PEM to be used during encryption and decryption.
      *
-     * @param bool $decrypt - decrypt encrypted private key or not
-     *
-     * @return string Certificate private key string
+     * @return ?string Certificate private key string
      */
     public function getDecryptedPrivateKey()
     {
         $privKey = openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
+        if(!$privKey){
+            return null;
+        }
         openssl_pkey_export($privKey, $return);
 
         return $return;
