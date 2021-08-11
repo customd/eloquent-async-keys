@@ -32,7 +32,9 @@ trait Creator
         $this->setupPublicKey($resource);
         $this->setupPrivateKey($resource);
 
-        openssl_pkey_free($resource);
+        if (\PHP_VERSION_ID < 80000) {
+            openssl_pkey_free($key);
+        }
 
         return $this;
     }
