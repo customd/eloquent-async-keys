@@ -15,13 +15,13 @@
     }
   ],
   "require": {
-    "php": ">=7.1",
-	"illuminate/support": "5.8|^6.0|^7.0|^8.0",
-	"ext-openssl": "*"
+    "php": "^7.1|^8.0",
+    "illuminate/support": "5.8|^6.0|^7.0|^8.0",
+    "ext-openssl": "*"
   },
   "require-dev": {
     "orchestra/testbench": "^3.8|^4.0|^5.0|^6.0",
-    "phpunit/phpunit": "^8.0|^9.0"
+    "phpunit/phpunit": "^8.0|^9.0|^10.0"
   },
   "autoload": {
     "psr-4": {
@@ -43,10 +43,10 @@
     "laravel": {
       "providers": [
         "CustomD\\EloquentAsyncKeys\\ServiceProvider"
-	  ],
-	  "aliases": {
-		"EloquentAsyncKeys": "CustomD\\EloquentAsyncKeys\\Facades\\EloquentAsyncKeys"
-		}
+      ],
+      "aliases": {
+        "EloquentAsyncKeys": "CustomD\\EloquentAsyncKeys\\Facades\\EloquentAsyncKeys"
+      }
     }
   },
   "config": {
