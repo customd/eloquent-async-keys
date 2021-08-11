@@ -12,8 +12,8 @@ trait Decrypt
 
         return [
             'cipherText' => base64_decode($cipherParts[0]),
-            'version' => base64_decode($cipherParts[1]),
-            'iv' => base64_decode($cipherParts[2]),
+            'version'    => base64_decode($cipherParts[1]),
+            'iv'         => base64_decode($cipherParts[2]),
         ];
     }
 
@@ -41,15 +41,17 @@ trait Decrypt
 
         [
             'cipherText' => $cipherText,
-            'version' => $version,
-            'iv' => $algorithmIv
+            'version'    => $version,
+            'iv'         => $algorithmIv
         ] = $this->parseCipherData($cipherData);
 
         $encryptionVersion = $this->getVersion($version);
         $algorithm = $this->versions[$encryptionVersion];
 
         if (openssl_open($cipherText, $decryptedData, base64_decode($key), $privateKey, $algorithm, $algorithmIv)) {
-            openssl_free_key($privateKey);
+            if (\PHP_VERSION_ID < 80000) {
+                openssl_free_key($privateKey);
+            }
 
             return $decryptedData;
         }

@@ -24,12 +24,12 @@ trait Encrypt
         $algorithmIv = $this->generateIV($encryptionVersion);
         $algorithm = $this->versions[$encryptionVersion];
 
-         $publicKeys = collect($this->publicKey)->map(function($publicKey, $id) {
-              $key = openssl_pkey_get_public($publicKey);
-              if(!$key){
+        $publicKeys = collect($this->publicKey)->map(function ($publicKey, $id) {
+             $key = openssl_pkey_get_public($publicKey);
+            if (! $key) {
                 Log::critical('Public key id: [' . $id . '] Is invalid');
-              }
-              return $key;
+            }
+             return $key;
         })->filter();
 
         $encryptedData = null;
@@ -41,12 +41,14 @@ trait Encrypt
             // Ensure each shareKey is labelled with its corresponding key id
             foreach ($publicKeys as $keyId => $publicKey) {
                 $mappedKeys[$keyId] = base64_encode($envelopeKeys[$i]);
-                openssl_free_key($publicKey);
+                if (\PHP_VERSION_ID < 80000) {
+                    openssl_free_key($publicKey);
+                }
                 $i++;
             }
 
             return [
-                'keys' => $mappedKeys,
+                'keys'       => $mappedKeys,
                 'cipherText' => base64_encode($encryptedData)
                     . ':'
                     . base64_encode($encryptionVersion)
