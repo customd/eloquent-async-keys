@@ -1,3 +1,18 @@
 include:
   - project: "custom-d/ci-templates"
-    file: "php-packages.gitlab-ci.yml"
+    file: "Semver.gitlab-ci.yml"
+
+
+test:php8:
+  image: dockerwest/php-laravel:8.0
+  script:
+    - composer install
+    - php vendor/bin/phpunit --colors
+    - php vendor/bin/larastan
+
+test:php8:
+  image: dockerwest/php-laravel:8.1
+  script:
+    - composer install
+    - php vendor/bin/phpunit --colors
+    - php vendor/bin/larastan
