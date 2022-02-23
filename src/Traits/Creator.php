@@ -2,6 +2,7 @@
 
 namespace CustomD\EloquentAsyncKeys\Traits;
 
+use OpenSSLAsymmetricKey;
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 
 trait Creator
@@ -14,12 +15,12 @@ trait Creator
      *
      * @return self
      */
-    public function create($keySize = null, $overwrite = false): self
+    public function create(?int $keySize = null, bool $overwrite = false): self
     {
         $keySize = $this->getKeySize($keySize);
 
         if (! $overwrite) {
-            if ($this->keyFileExists($this->publicKey) || $this->keyFileExists($this->privateKey)) {
+            if ($this->keyFileExists(strval($this->publicKey)) || $this->keyFileExists(strval($this->privateKey))) {
                 throw new Exception('Existing keys found. Remove keys or pass $overwrite == true / --overwrite .');
             }
         }
@@ -29,12 +30,12 @@ trait Creator
             'private_key_type' => OPENSSL_KEYTYPE_RSA,
         ]);
 
+        if ($resource === false) {
+            throw new Exception('Failed to create the keys');
+        }
+
         $this->setupPublicKey($resource);
         $this->setupPrivateKey($resource);
-
-        if (\PHP_VERSION_ID < 80000) {
-            openssl_pkey_free($resource);
-        }
 
         return $this;
     }
@@ -42,15 +43,19 @@ trait Creator
     /**
      * Generates the public key and stores it.
      *
-     * @param resource $resource
+     * @param OpenSSLAsymmetricKey $resource
      *
      * @throws Exception
      */
-    protected function setupPublicKey($resource): void
+    protected function setupPublicKey(OpenSSLAsymmetricKey $resource): void
     {
-        $publicKey = openssl_pkey_get_details($resource)['key'];
+        throw_if(is_array($this->publicKey), Exception::class, "OpenSSL: Can only set a single public key with the setupPublicKey method.");
+        $pkey = openssl_pkey_get_details($resource);
+        throw_if($pkey === false, Exception::class, "OpenSSL: Error getting PUBLIC key details.");
 
-        if (strpos($this->publicKey, 'file://') === 0) {
+        $publicKey = $pkey['key'];
+
+        if (is_string($this->publicKey) && strpos($this->publicKey, 'file://') === 0) {
             $bytes = file_put_contents($this->publicKey, $publicKey);
         } else {
             $this->publicKey = $publicKey;
@@ -65,17 +70,19 @@ trait Creator
     /**
      * Generates the private key and stores it.
      *
-     * @param resource $resource
+     * @param OpenSSLAsymmetricKey $resource
      *
      * @throws Exception
      */
-    protected function setupPrivateKey($resource): void
+    protected function setupPrivateKey(OpenSSLAsymmetricKey $resource): void
     {
+        throw_if(is_array($this->privateKey), Exception::class, "OpenSSL: Can only set a single private key with the setupPrivateKey method.");
+
         $privateKey = '';
 
         openssl_pkey_export($resource, $privateKey, $this->saltedPassword());
 
-        if (strpos($this->privateKey, 'file://') === 0) {
+        if (is_string($this->privateKey) && strpos($this->privateKey, 'file://') === 0) {
             $bytes = file_put_contents($this->privateKey, $privateKey);
         } else {
             $this->privateKey = $privateKey;

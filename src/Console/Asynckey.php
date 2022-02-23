@@ -28,26 +28,24 @@ class Asynckey extends Command
      */
     protected $signature = 'asynckey {--overwrite}';
 
-    /**
-     * Execute the console command.
-     *
-     * @return mixed
-     */
-    public function handle()
+
+    public function handle(): void
     {
         $this->confirmDirectory();
         $password = config('app.key');
 
-        if (! $password) {
+        if (! is_string($password) || empty($password)) {
             throw new \Exception('Application Key required');
         }
 
         $publicKey = storage_path() . '/_certs/public.key';
         $privateKey = storage_path() . '/_certs/private.key';
 
-        $overwrite = $this->option('overwrite');
+        $overwrite = boolval($this->option('overwrite'));
 
-        $rsa = new Keypair(config('eloquent-async-keys'),$publicKey, $privateKey, $password);
+        /** @var array{versions: array<string,string>, default: string} $config */
+        $config = config('eloquent-async-keys');
+        $rsa = new Keypair($config, $publicKey, $privateKey, $password);
 
         try {
             $rsa->create(null, $overwrite);
@@ -59,7 +57,7 @@ class Asynckey extends Command
     /**
      * confimrm the directory exists.
      */
-    protected function confirmDirectory()
+    protected function confirmDirectory(): void
     {
         if (! is_dir(\storage_path() . '/_certs')) {
             mkdir(\storage_path() . '/_certs', 0770, true);

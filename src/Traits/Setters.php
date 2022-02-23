@@ -6,13 +6,12 @@ use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 
 trait Setters
 {
-
     /**
      * sets the config versions
      *
-     * @param array $config
+     * @param array{versions: array<string,string>, default: string} $config
      *
-     * @return void
+     * @return self
      */
     public function setConfig(array $config): self
     {
@@ -52,6 +51,12 @@ trait Setters
      */
     public function setPublicKey(?string $publicKey = null): self
     {
+
+        if ($publicKey === null) {
+            $this->publicKey = null;
+            return $this;
+        }
+
         $this->publicKey = $this->fixKeyArgument($publicKey);
 
         return $this;
@@ -66,6 +71,11 @@ trait Setters
      */
     public function setPrivateKey(?string $privateKey = null): self
     {
+        if ($privateKey === null) {
+            $this->privateKey = null;
+            return $this;
+        }
+
         $this->privateKey = $this->fixKeyArgument($privateKey);
 
         return $this;
@@ -97,7 +107,7 @@ trait Setters
         if ($salt === true) {
             $salt = bin2hex(random_bytes(16));
         }
-        $this->salt = $salt;
+        $this->salt = $salt === false ? null : $salt;
 
         return $this;
     }

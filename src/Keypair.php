@@ -2,6 +2,7 @@
 
 namespace CustomD\EloquentAsyncKeys;
 
+use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use CustomD\EloquentAsyncKeys\Traits\Creator;
 use CustomD\EloquentAsyncKeys\Traits\Decrypt;
 use CustomD\EloquentAsyncKeys\Traits\Encrypt;
@@ -26,41 +27,30 @@ class Keypair
     protected const DEFAULT_KEY_SIZE = 2048;
 
     /**
-     * Holds our public key.
-     *
-     * @var string
+     * @var string|array<int, string>|null
      */
-    protected $publicKey;
+    protected string|array|null $publicKey;
+
+     /**
+     * @var string|array<int, string>|null
+     */
+    protected string|array|null $privateKey;
+
+    protected ?string $password;
+
+    protected ?string $salt = null;
 
     /**
-     * Holds our private key.
-     *
-     * @var string
+     * @var array<string, string> $versions
      */
-    protected $privateKey;
+    protected array $versions = [];
 
-    /**
-     * Holds our key password if needed.
-     *
-     * @var string
-     */
-    protected $password;
-
-    /**
-     * Holds our key password Salt.
-     *
-     * @var  string|null
-     */
-    protected $salt = null;
-
-    protected $versions = [];
-
-    protected $version = null;
+    protected string $version;
 
     /**
      * Constructor for our Keypair.
      *
-     * @param array        $config
+     * @param array{versions: array<string,string>, default: string}        $config
      * @param string|null $publicKey
      * @param string|null $privateKey
      * @param string|null $password
@@ -75,19 +65,17 @@ class Keypair
     /**
      * gets the current version
      *
-     * @param mixed $version
+     * @param ?string $version
      *
-     * @return mixed
+     * @return string
      */
-    public function getVersion($version = null)
+    public function getVersion(?string $version = null): string
     {
-        if ($version === null) {
-            $version = $this->version;
-        }
+        $version ??= $this->version;
 
         if (! isset($this->versions[$version])) {
             end($this->versions);
-            $version = key($this->versions);
+            $version = strval(key($this->versions));
         }
 
         return $version;
@@ -96,17 +84,17 @@ class Keypair
     /**
      * generates a new IV string
      *
-     * @param mixed $version
+     * @param string $version
      *
      * @return string
      */
-    public function generateIV($version): string
+    public function generateIV(string $version): string
     {
         $cipher = $this->versions[$version];
         $len = openssl_cipher_iv_length($cipher);
 
-        if ((int) $len === 0) {
-            return '';
+        if ($len === false || $len < 1) {
+            throw new Exception("Invalid cipher detected");
         }
 
         return \random_bytes($len);
@@ -134,7 +122,7 @@ class Keypair
      *
      * @return string
      */
-    protected function fixKeyArgument($keyFile): ?string
+    protected function fixKeyArgument(string $keyFile): string
     {
         $keyFile = ltrim($keyFile);
 
@@ -153,19 +141,19 @@ class Keypair
      *
      * @return bool
      */
-    protected function keyFileExists($keyFile): bool
+    protected function keyFileExists(?string $keyFile): bool
     {
-        return strpos($keyFile, 'file://') === 0 && file_exists($keyFile);
+        return ! is_null($keyFile) && strpos($keyFile, 'file://') === 0 && file_exists($keyFile);
     }
 
     /**
      * gets the keysize and makes sure that it is returned within the guidelines.
      *
-     * @param int $keySize
+     * @param ?int $keySize
      *
      * @return int
      */
-    public function getKeySize($keySize = null): int
+    public function getKeySize(?int $keySize = null): int
     {
         $keySize = intval($keySize);
 
@@ -179,9 +167,9 @@ class Keypair
     /**
      * Get public key to be used during encryption and decryption.
      *
-     * @return string Certificate public key string or stream path
+     * @return string|array<int,string>|null Certificate public key string or stream path
      */
-    public function getPublicKey(): ?string
+    public function getPublicKey(): string|array|null
     {
         return $this->publicKey;
     }
@@ -189,9 +177,9 @@ class Keypair
     /**
      * Get private key to be used during encryption and decryption.
      *
-     * @return string Certificate private key string or stream path
+     * @return string|array<int,string>|null Certificate private key string or stream path
      */
-    public function getPrivateKey(): ?string
+    public function getPrivateKey(): string|array|null
     {
         return $this->privateKey;
     }
@@ -211,10 +199,14 @@ class Keypair
      *
      * @return ?string Certificate private key string
      */
-    public function getDecryptedPrivateKey()
+    public function getDecryptedPrivateKey(): ?string
     {
+        if (! is_string($this->privateKey)) {
+            return null;
+        }
+
         $privKey = openssl_pkey_get_private($this->privateKey, $this->saltedPassword());
-        if(!$privKey){
+        if (! $privKey) {
             return null;
         }
         openssl_pkey_export($privKey, $return);
@@ -232,7 +224,7 @@ class Keypair
         if ($this->password === null) {
             return null;
         }
-        $salt = $this->salt === null ? sha1($this->password) : $this->salt;
+        $salt = $this->salt ?? sha1($this->password);
         // NIST recommendation is 10k iterations.
         return hash_pbkdf2('sha256', $this->password, $salt, 10000, 50);
     }
@@ -240,23 +232,18 @@ class Keypair
     /**
      * Method that checks through 1 or more public keys are valid and throw an exception if any are broken.
      *
+     * @param array<int, string> $publicKey
+     *
      * @throws InvalidKeysException
      */
-    public function checkPublicKey($publicKey): void
+    public function checkPublicKey(string|array $publicKey): void
     {
-         $invalidKeys = collect($publicKey)->map(function($publicKey, $id) {
-              $key = openssl_pkey_get_public($publicKey);
-              if(!$key){
-                return $id;
-              }
-              return null;
-        })->filter();
-
-        if($invalidKeys->isNotEmpty()){
-            $exception = new InvalidKeysException('The following public keys are invalid');
-            $exception->setKeys($invalidKeys->toArray());
-            throw $exception;
-        }
-
+        $invalidKeys = collect((array)$publicKey)
+            ->map(function ($publicKey, $id) {
+                $key = openssl_pkey_get_public($publicKey);
+                return ! $key ? $id : null;
+            })
+            ->filter()
+            ->whenNotEmpty(fn($collection) => throw InvalidKeysException::withKeys($collection));
     }
 }
