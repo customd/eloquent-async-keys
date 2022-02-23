@@ -9,7 +9,6 @@ test:php8:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
-    - php vendor/bin/larastan
 
 test:php8.1:
   image: tiagosampaio/php:8.1
@@ -17,4 +16,10 @@ test:php8.1:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
-    - php vendor/bin/larastan
+
+test:phpstan:
+  image: tiagosampaio/php:8.1
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpstan
