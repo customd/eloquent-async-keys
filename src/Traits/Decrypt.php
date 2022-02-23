@@ -6,7 +6,12 @@ use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 
 trait Decrypt
 {
-    public function parseCipherData($cipherData)
+    /**
+     * @param string $cipherData
+     *
+     * @return array<string, string>
+     */
+    public function parseCipherData(string $cipherData): array
     {
         $cipherParts = explode(':', $cipherData);
 
@@ -20,13 +25,14 @@ trait Decrypt
     /**
      * Decrypt data with provided private certificate.
      *
-     * @param string $data Data to encrypt
+     * @param string $cipherData Data to encrypt
+     * @param string $key
      *
      * @throws Exception
      *
      * @return string Decrypted data
      */
-    protected function performDecryption($cipherData, $key): string
+    protected function performDecryption(string $cipherData, string $key): string
     {
         if ($this->privateKey === null) {
             throw new Exception('Unable to decrypt: No private key provided.');
@@ -49,10 +55,6 @@ trait Decrypt
         $algorithm = $this->versions[$encryptionVersion];
 
         if (openssl_open($cipherText, $decryptedData, base64_decode($key), $privateKey, $algorithm, $algorithmIv)) {
-            if (\PHP_VERSION_ID < 80000) {
-                openssl_free_key($privateKey);
-            }
-
             return $decryptedData;
         }
 
@@ -62,12 +64,12 @@ trait Decrypt
     /**
      * optional base64_decode data and then decrypt it.
      *
-     * @param string $data  data to decrypt
-     * @param string $decode - base64 decode the data before decrypting?
+     * @param string $cipherText  data to decrypt
+     * @param string $key
      *
      * @return string Decrypted data
      */
-    public function decrypt($cipherText, $key = null): string
+    public function decrypt(string $cipherText, string $key): string
     {
         return $this->performDecryption($cipherText, $key);
     }
@@ -75,16 +77,15 @@ trait Decrypt
     /**
      * Decrypts with a provided key.
      *
-     * @param [type] $privateKey
-     * @param [type] $data
-     * @param bool $decode
+     * @param string $privateKey
+     * @param string $cipherText
      *
      * @return string
      */
-    public function decryptWithKey($privateKey, $data, $key = null): string
+    public function decryptWithKey(string $privateKey, string $cipherText, string $key): string
     {
         $this->privateKey = $privateKey;
 
-        return $this->decrypt($data, $key);
+        return $this->decrypt($cipherText, $key);
     }
 }

@@ -15,16 +15,17 @@ trait Encrypt
      *
      * @throws Exception
      *
-     * @return array Encrypted data
+     * @return array{'keys': array<int, string>, 'cipherText': string} Encrypted data
      */
-    protected function performEncryption($data, $version = null): array
+    protected function performEncryption(string $data, ?string $version = null): array
     {
-        $encryptionVersion = $this->getVersion($version);
+        throw_if($this->publicKey === null, Exception::class, 'No public keys provided to encrypt with');
 
+        $encryptionVersion = $this->getVersion($version);
         $algorithmIv = $this->generateIV($encryptionVersion);
         $algorithm = $this->versions[$encryptionVersion];
 
-        $publicKeys = collect($this->publicKey)->map(function ($publicKey, $id) {
+        $publicKeys = collect((array)$this->publicKey)->map(function ($publicKey, $id) {
              $key = openssl_pkey_get_public($publicKey);
             if (! $key) {
                 Log::critical('Public key id: [' . $id . '] Is invalid');
@@ -40,11 +41,7 @@ trait Encrypt
             $i = 0;
             // Ensure each shareKey is labelled with its corresponding key id
             foreach ($publicKeys as $keyId => $publicKey) {
-                $mappedKeys[$keyId] = base64_encode($envelopeKeys[$i]);
-                if (\PHP_VERSION_ID < 80000) {
-                    openssl_free_key($publicKey);
-                }
-                $i++;
+                $mappedKeys[$keyId] = base64_encode($envelopeKeys[$i++]);
             }
 
             return [
@@ -65,9 +62,9 @@ trait Encrypt
      *
      * @param string $data Data to encrypt
      *
-     * @return array Base64-encrypted data
+     * @return array{'keys':array<int, string>, 'cipherText':string} Base64-encrypted data
      */
-    public function encrypt($data, $version = null): array
+    public function encrypt($data, ?string $version = null): array
     {
 
         return $this->performEncryption($data, $version);
@@ -76,12 +73,13 @@ trait Encrypt
     /**
      * Encrypts the data with a supplied key.
      *
-     * @param string|array $publicKey
+     * @param string|array<int, string> $publicKey
      * @param string $data
+     * @param ?string $version
      *
-     * @return array
+     * @return array{'keys':array<int, string>, 'cipherText':string}
      */
-    public function encryptWithKey($publicKey, $data, $version = null): array
+    public function encryptWithKey(string|array $publicKey, $data, ?string $version = null): array
     {
         $this->publicKey = [];
         foreach ((array) $publicKey as $keyId => $key) {
