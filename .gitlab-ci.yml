@@ -4,19 +4,17 @@ include:
 
 
 test:php8:
-  image: dockerwest/php:8.0
+  image: tiagosampaio/php:8.0
   script:
-    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    - php composer-setup.php
-    - php composer.phar install
+    - php -v
+    - composer install
     - php vendor/bin/phpunit --colors
     - php vendor/bin/larastan
 
 test:php8.1:
-  image: dockerwest/php:8.1
+  image: tiagosampaio/php:8.1
   script:
-    - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-    - php composer-setup.php
-    - php composer.phar install
+    - php -v
+    - composer install
     - php vendor/bin/phpunit --colors
     - php vendor/bin/larastan
