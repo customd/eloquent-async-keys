@@ -8,7 +8,7 @@ test:php8:
   script:
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     - php composer-setup.php
-    - composer.phar install
+    - php composer.phar install
     - php vendor/bin/phpunit --colors
     - php vendor/bin/larastan
 
@@ -17,6 +17,6 @@ test:php8.1:
   script:
     - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
     - php composer-setup.php
-    - composer.phar install
+    - php composer.phar install
     - php vendor/bin/phpunit --colors
     - php vendor/bin/larastan
