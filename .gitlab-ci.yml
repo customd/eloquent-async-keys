@@ -10,7 +10,7 @@ test:php8:
     - php vendor/bin/phpunit --colors
     - php vendor/bin/larastan
 
-test:php8:
+test:php8.1:
   image: dockerwest/php-laravel:8.1
   script:
     - composer install
