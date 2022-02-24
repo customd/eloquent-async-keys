@@ -1,3 +1,15 @@
+cache:
+  - key:
+      files: [composer.lock]
+    policy: pull
+    untracked: true
+  - key: $CI_PROJECT_ID
+    policy: pull
+    untracked: true
+  - key: build-$CI_COMMIT_REF_SLUG
+    policy: pull
+    untracked: true
+
 include:
   - project: "custom-d/ci-templates"
     file: "Semver.gitlab-ci.yml"
@@ -9,12 +21,34 @@ variables:
   ADD_CODE_COVERAGE: "1"
   ADD_STATIC_ANALYSIS: "1"
 
+
+composer install:
+  image: tiagosampaio/php:$PHP_VERSION
+  stage: .pre
+  script:
+    - composer install
+  cache:
+    - key:
+        files: [yarn.lock]
+      policy: pull-push
+      paths:
+        - node_modules
+    - key: $CI_PROJECT_ID
+      policy: pull-push
+      paths:
+        - .yarn
+        - .yarn-offline
+
+
 test:php:latest:
   image: tiagosampaio/php:$PHP_VERSION
   script:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
+  needs:
+    - composer install
+
 
 test:php:8:
   image: tiagosampaio/php:8.0
@@ -42,28 +76,29 @@ test:codecoverage:
     - php -v
     - composer install
     - php vendor/bin/phpunit --coverage-cobertura=cobertura-coverage.xml --coverage-text --log-junit junit-report.xml  --coverage-html ./coverage-report
-    - cp /app/cobertura-coverage.xml ./cobertura.xml
-    - cp /app/junit-report.xml .
-    - cp /app/phpstan.json .
   artifacts:
     reports:
       junit: junit-report.xml
       cobertura: cobertura.xml
     paths:
-      - app/coverage-report
+      - coverage-report
   rules:
     - if: $ADD_CODE_COVERAGE == "1"
       when: always
+  needs:
+    - composer install
 
 test:phpstan:
   image: tiagosampaio/php:8.1
   script:
     - php -v
     - composer install
-    - php vendor/bin/phpstan
+    - php vendor/bin/phpstan --configuration=phpstan.neon.dist --memory-limit=1G --no-progress --error-format=gitlab > phpstan.json
   rules:
       - if: $ADD_STATIC_ANALYSIS == "1"
         when: always
   artifacts:
     reports:
       codequality: phpstan.json
+  needs:
+    - composer install
