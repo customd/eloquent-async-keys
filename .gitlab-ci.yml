@@ -2,20 +2,58 @@ include:
   - project: "custom-d/ci-templates"
     file: "Semver.gitlab-ci.yml"
 
+variables:
+  PHP_VERSION: 'latest'
+  ADD_PHP_8: "1"
+  ADD_PHP_7_4: "0"
+  ADD_CODE_COVERAGE: "1"
+  ADD_STATIC_ANALYSIS: "1"
 
-test:php8:
+test:php:latest:
+  image: tiagosampaio/php:$PHP_VERSION
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpunit --colors
+
+test:php:8:
   image: tiagosampaio/php:8.0
   script:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
+  rules:
+    - if: $ADD_PHP_8 == "1"
+      when: always
 
-test:php8.1:
-  image: tiagosampaio/php:8.1
+test:php:7-4:
+  image: tiagosampaio/php:7.4
   script:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
+  rules:
+    - if: $ADD_PHP_7_4 == "1"
+      when: always
+
+test:codecoverage:
+  image: tiagosampaio/php:latest
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpunit --coverage-cobertura=cobertura-coverage.xml --coverage-text --log-junit junit-report.xml  --coverage-html ./coverage-report
+    - cp /app/cobertura-coverage.xml ./cobertura.xml
+    - cp /app/junit-report.xml .
+    - cp /app/phpstan.json .
+  artifacts:
+    reports:
+      junit: junit-report.xml
+      cobertura: cobertura.xml
+    paths:
+      - app/coverage-report
+  rules:
+    - if: $ADD_CODE_COVERAGE == "1"
+      when: always
 
 test:phpstan:
   image: tiagosampaio/php:8.1
@@ -23,3 +61,9 @@ test:phpstan:
     - php -v
     - composer install
     - php vendor/bin/phpstan
+  rules:
+      - if: $ADD_STATIC_ANALYSIS == "1"
+        when: always
+  artifacts:
+    reports:
+      codequality: phpstan.json
