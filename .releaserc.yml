@@ -1,4 +1,3 @@
-
 plugins:
   - "@semantic-release/commit-analyzer"
   - "@semantic-release/release-notes-generator"
@@ -16,8 +15,10 @@ plugins:
         - CHANGELOG.md
       message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
 branches:
+  - "master"
   - "main"
+  - "+([0-9])?(.{+([0-9]),x}).x"
   - name: "beta"
     prerelease: "beta"
-  - name: "alpha"
-    prerelease: "alpha"
+  - name: "beta"
+    prerelease: "beta"
