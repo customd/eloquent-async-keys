@@ -11,13 +11,10 @@ variables:
 
 
 test:php:latest:
-  image: tiagosampaio/php:$PHP_VERSION
   script:
     - php -v
     - composer install
     - php vendor/bin/phpunit --colors
-
-
 
 test:php:8:
   image: tiagosampaio/php:8.0
@@ -55,7 +52,6 @@ test:codecoverage:
     - if: $ADD_CODE_COVERAGE == "1"
       when: always
 
-
 test:phpstan:
   image: tiagosampaio/php:8.1
   script:
@@ -68,4 +64,3 @@ test:phpstan:
   artifacts:
     reports:
       codequality: phpstan.json
-
