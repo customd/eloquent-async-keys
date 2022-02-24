@@ -1,35 +1,25 @@
-test:
-  tags:
-    - dev
-  stage: test
-  only:
-    - merge_requests
-    - master
-  image: roadiz/php73-runner
-  variables:
-    BACKEND_QA: $CI_PROJECT_DIR/QA
-    BACKEND_CACHE: $CI_PROJECT_DIR/.composercache
-    GIT_SUBMODULE_STRATEGY: recursive
-  cache:
-    paths:
-    - $BACKEND_CACHE
-    - vendor/
-  script:
-    #Initiailise any submodules / setups
-    - 'mkdir -p $CI_PROJECT_DIR/QA'
-    #Composer setups
-    - 'export COMPOSER_CACHE_DIR=$BACKEND_CACHE'
-    - 'export COMPOSER_PROCESS_TIMEOUT=900'
-    - 'composer install --ignore-platform-reqs --no-progress --no-suggest'
-    - 'composer global require phpcompatibility/php-compatibility --update-no-dev'
-    - 'composer --global config process-timeout 2000'
-    - 'phpcs --config-set installed_paths ~/.composer/vendor/phpcompatibility/php-compatibility'
-    - 'phpcs --standard=PHPCompatibility,PSR12 --runtime-set testVersion 7.2- --extensions=php  --ignore=/vendor/,/database/ --report=junit --report-file=$BACKEND_QA/junit.standards.xml ./'
+include:
+  - project: "custom-d/ci-templates"
+    file: "Semver.gitlab-ci.yml"
 
-  artifacts:
-    when: always
-    paths:
-      - $BACKEND_QA
-    reports:
-      junit: $BACKEND_QA/junit.*.xml
-      #eslint: eslint.json
+
+test:php8:
+  image: tiagosampaio/php:8.0
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpunit --colors
+
+test:php8.1:
+  image: tiagosampaio/php:8.1
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpunit --colors
+
+test:phpstan:
+  image: tiagosampaio/php:8.1
+  script:
+    - php -v
+    - composer install
+    - php vendor/bin/phpstan
