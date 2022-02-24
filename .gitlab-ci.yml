@@ -11,6 +11,7 @@ variables:
 
 
 test:php:latest:
+  image: tiagosampaio/php:8.0
   script:
     - php -v
     - composer install
