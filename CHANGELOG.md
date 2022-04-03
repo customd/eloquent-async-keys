@@ -1,3 +1,15 @@
+# [3.0.0](https://git.customd.com/composer/eloquent-async-keys/compare/v2.3.2...v3.0.0) (2022-04-03)
+
+
+### Features
+
+* Laravel 9 / php 8.1 ([d9d5e1d](https://git.customd.com/composer/eloquent-async-keys/commit/d9d5e1daa3c31fdf1b0e598e17c6d97060f9073a))
+
+
+### BREAKING CHANGES
+
+* Dropped support for older PHP versions
+
 # [3.0.0-beta.1](https://git.customd.com/composer/eloquent-async-keys/compare/v2.4.0-beta.1...v3.0.0-beta.1) (2022-02-24)
 
 
