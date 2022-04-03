@@ -8,6 +8,11 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
 {
     protected const CONFIG_PATH = __DIR__ . '/../config/eloquent-async-keys.php';
 
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
     public function boot()
     {
         $this->publishes([
@@ -15,6 +20,9 @@ class ServiceProvider extends \Illuminate\Support\ServiceProvider
         ], 'config');
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public function register()
     {
         $this->mergeConfigFrom(

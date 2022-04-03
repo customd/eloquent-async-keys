@@ -7,7 +7,16 @@ use CustomD\EloquentAsyncKeys\Keypair;
 
 class Keygen extends Internet
 {
-    public function keygenCollection($password = null, $salt = null, $algo = 'AES128')
+    /**
+     * generate keygen for faker
+     *
+     * @param string|null $password
+     * @param string|null $salt
+     * @param string $algo
+     *
+     * @return array<string,string>
+     */
+    public function keygenCollection(?string $password = null, ?string $salt = null, string $algo = 'AES128'): array
     {
         $rsa = new Keypair([
             'versions' => [
@@ -15,7 +24,7 @@ class Keygen extends Internet
                 'AES192' => 'AES192',
                 'AES256' => 'AES256',
             ],
-            'default' => $algo,
+            'default'  => $algo,
         ]);
 
         if ($password === null) {
@@ -26,9 +35,9 @@ class Keygen extends Internet
             'password' => $password,
         ];
         $rsa->setPassword($password)->setSalt($salt)->create();
-        $dataSet['salt'] = $rsa->getSalt();
-        $dataSet['publicKey'] = $rsa->getPublicKey();
-        $dataSet['privateKey'] = $rsa->getPrivateKey();
+        $dataSet['salt'] = strval($rsa->getSalt());
+        $dataSet['publicKey'] = strval($rsa->getPublicKey());
+        $dataSet['privateKey'] = strval($rsa->getPrivateKey());
 
         return $dataSet;
     }
