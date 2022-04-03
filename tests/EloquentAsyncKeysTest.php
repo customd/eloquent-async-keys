@@ -6,6 +6,7 @@ use Illuminate\Support\Str;
 use Orchestra\Testbench\TestCase;
 use CustomD\EloquentAsyncKeys\ServiceProvider;
 use CustomD\EloquentAsyncKeys\Exceptions\Exception;
+use CustomD\EloquentAsyncKeys\Exceptions\InvalidKeysException;
 use CustomD\EloquentAsyncKeys\Facades\EloquentAsyncKeys;
 
 class EloquentAsyncKeysTest extends TestCase
@@ -295,6 +296,19 @@ f7KPVfVkTbkzdAvrebYyZNhKcVSkBsUvmPKzRMLgvJ40BNGdD3iicaJuNER2JbU8
             $res = EloquentAsyncKeys::setPrivateKey($privateKey)->decrypt($cipherText, $cipherKeys[$uid]);
             $this->assertSame((string) $res, (string) $plainText);
         }
+    }
+
+    public function test_checkPublicKey_bad()
+    {
+        $this->expectException(InvalidKeysException::class);
+        EloquentAsyncKeys::checkPublicKey([2 => 'bad key']);
+    }
+
+    public function test_checkPublicKey_good()
+    {
+
+        $r = EloquentAsyncKeys::checkPublicKey($this->publicKey);
+        $this->assertNull($r);
     }
 
     public function testHiLoad()
