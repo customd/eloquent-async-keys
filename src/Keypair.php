@@ -103,9 +103,9 @@ class Keypair
     /**
      * Reset function to setup for new round of keys.
      *
-     * @return self
+     * @return static
      */
-    public function reset(): self
+    public function reset(): static
     {
         $this->publicKey = null;
         $this->privateKey = null;

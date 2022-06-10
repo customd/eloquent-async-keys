@@ -4,6 +4,7 @@ namespace CustomD\EloquentAsyncKeys\Exceptions;
 
 use Illuminate\Support\Collection;
 
+/** @phpstan-consistent-constructor */
 class InvalidKeysException extends \Exception
 {
     /**
