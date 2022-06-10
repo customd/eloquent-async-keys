@@ -13,9 +13,9 @@ trait Creator
      * @param null $keySize   RSA Key Size in bits
      * @param bool $overwrite Overwrite existing key files
      *
-     * @return self
+     * @return static
      */
-    public function create(?int $keySize = null, bool $overwrite = false): self
+    public function create(?int $keySize = null, bool $overwrite = false): static
     {
         $keySize = $this->getKeySize($keySize);
 

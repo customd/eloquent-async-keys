@@ -11,9 +11,9 @@ trait Setters
      *
      * @param array{versions: array<string,string>, default: string} $config
      *
-     * @return self
+     * @return static
      */
-    public function setConfig(array $config): self
+    public function setConfig(array $config): static
     {
         $this->versions = $config['versions'];
         $this->version = $config['default'];
@@ -28,9 +28,9 @@ trait Setters
      * @param string $password
      * @param string|bool $salt - set to true to generate a new random one
      *
-     * @return self
+     * @return static
      */
-    public function setKeys($publicKey = null, $privateKey = null, $password = null, $salt = null): self
+    public function setKeys($publicKey = null, $privateKey = null, $password = null, $salt = null): static
     {
         $this->reset();
 
@@ -47,9 +47,9 @@ trait Setters
      *
      * @param string|null $publicKey
      *
-     * @return self
+     * @return static
      */
-    public function setPublicKey(?string $publicKey = null): self
+    public function setPublicKey(?string $publicKey = null): static
     {
 
         if ($publicKey === null) {
@@ -67,9 +67,9 @@ trait Setters
      *
      * @param string|null $privateKey
      *
-     * @return self
+     * @return static
      */
-    public function setPrivateKey(?string $privateKey = null): self
+    public function setPrivateKey(?string $privateKey = null): static
     {
         if ($privateKey === null) {
             $this->privateKey = null;
@@ -86,9 +86,9 @@ trait Setters
      *
      * @param string|null $password Certificate password
      *
-     * @return self
+     * @return static
      */
-    public function setPassword(?string $password = null): self
+    public function setPassword(?string $password = null): static
     {
         $this->password = $password;
 
@@ -100,9 +100,9 @@ trait Setters
      *
      * @param bool|string|null $salt
      *
-     * @return self
+     * @return static
      */
-    public function setSalt($salt = null): self
+    public function setSalt($salt = null): static
     {
         if ($salt === true) {
             $salt = bin2hex(random_bytes(16));
@@ -118,9 +118,9 @@ trait Setters
      * @param string $newPassword
      * @param bool|string|null $newSalt
      *
-     * @return self
+     * @return static
      */
-    public function setNewPassword(string $newPassword, $newSalt = false): self
+    public function setNewPassword(string $newPassword, $newSalt = false): static
     {
         $decryptedPrivateKey = $this->getDecryptedPrivateKey();
 
