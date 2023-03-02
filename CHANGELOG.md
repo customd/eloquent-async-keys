@@ -1,3 +1,10 @@
+## [4.0.1](https://git.customd.com/composer/eloquent-async-keys/compare/v4.0.0...v4.0.1) (2023-03-02)
+
+
+### Bug Fixes
+
+* laravel 10 ([e45cdee](https://git.customd.com/composer/eloquent-async-keys/commit/e45cdee92e9a0ebe63dd3ac07af744f2ef374df2))
+
 # [4.0.0](https://git.customd.com/composer/eloquent-async-keys/compare/v3.0.0...v4.0.0) (2022-06-10)
 
 
