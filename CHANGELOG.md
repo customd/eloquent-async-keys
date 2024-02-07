@@ -1,3 +1,10 @@
+# [4.1.0](https://git.customd.com/composer/eloquent-async-keys/compare/v4.0.1...v4.1.0) (2024-02-07)
+
+
+### Features
+
+* laravel 11 ([646e0f1](https://git.customd.com/composer/eloquent-async-keys/commit/646e0f17e1e341e633a837c30b7d370adf40df9b))
+
 ## [4.0.1](https://git.customd.com/composer/eloquent-async-keys/compare/v4.0.0...v4.0.1) (2023-03-02)
 
 
