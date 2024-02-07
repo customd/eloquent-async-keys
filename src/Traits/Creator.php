@@ -20,7 +20,10 @@ trait Creator
         $keySize = $this->getKeySize($keySize);
 
         if (! $overwrite) {
-            if ($this->keyFileExists(strval($this->publicKey)) || $this->keyFileExists(strval($this->privateKey))) {
+            if (
+                (is_string($this->publicKey) && $this->keyFileExists($this->publicKey)) ||
+                (is_string($this->privateKey)  && $this->keyFileExists(strval($this->privateKey)))
+            ) {
                 throw new Exception('Existing keys found. Remove keys or pass $overwrite == true / --overwrite .');
             }
         }

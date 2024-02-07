@@ -2,6 +2,7 @@
 
 namespace CustomD\EloquentAsyncKeys\Faker;
 
+use CustomD\EloquentAsyncKeys\Exceptions\Exception;
 use Faker\Provider\Internet;
 use CustomD\EloquentAsyncKeys\Keypair;
 
@@ -36,8 +37,12 @@ class Keygen extends Internet
         ];
         $rsa->setPassword($password)->setSalt($salt)->create();
         $dataSet['salt'] = strval($rsa->getSalt());
-        $dataSet['publicKey'] = strval($rsa->getPublicKey());
-        $dataSet['privateKey'] = strval($rsa->getPrivateKey());
+        $publicKey = $rsa->getPublicKey();
+        $privateKey = $rsa->getPrivateKey();
+        throw_if(is_string($publicKey) === false || is_string($privateKey) === false, Exception::class, 'Invalid key generation');
+
+        $dataSet['publicKey'] = $publicKey;
+        $dataSet['privateKey'] = $privateKey;
 
         return $dataSet;
     }

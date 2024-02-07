@@ -1,6 +1,9 @@
 include:
   - project: "custom-d/ci-templates"
-    file: "php-packages.gitlab-ci.yml"
+    file: "php-packages.latest.yml"
 
 variables:
-  TEST_PHP_8_0: "1"
+  TEST_PHP_8_3: "true"
+  TEST_PHP_8_2: "true"
+  TEST_PHP_8_1: "true"
+  TEST_PHP_8_0: "false"
