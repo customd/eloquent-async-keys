@@ -1,3 +1,10 @@
+## [4.1.1](https://git.customd.com/composer/eloquent-async-keys/compare/v4.1.0...v4.1.1) (2025-01-28)
+
+
+### Bug Fixes
+
+* php 8.4 testing ([60fff81](https://git.customd.com/composer/eloquent-async-keys/commit/60fff8174ddced67dc59e5731f4263f9f091775e))
+
 # [4.1.0](https://git.customd.com/composer/eloquent-async-keys/compare/v4.0.1...v4.1.0) (2024-02-07)
 
 
