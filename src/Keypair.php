@@ -239,11 +239,12 @@ class Keypair
     public function checkPublicKey(string|array $publicKey): void
     {
         $invalidKeys = collect((array)$publicKey)
+            ->filter(fn($key) =>  openssl_pkey_get_public($key) === false)
             ->map(function ($publicKey, $id) {
                 $key = openssl_pkey_get_public($publicKey);
-                return ! $key ? $id : null;
+                return ! $key ? strval($id) : null;
             })
             ->filter()
-            ->whenNotEmpty(fn($collection) => throw InvalidKeysException::withKeys($collection));
+            ->whenNotEmpty(fn($collection) => throw InvalidKeysException::withKeys($collection)); //@phpstan-ignore argument.type
     }
 }
