@@ -1,3 +1,10 @@
+## [4.1.2](https://git.customd.com/composer/eloquent-async-keys/compare/v4.1.1...v4.1.2) (2025-03-01)
+
+
+### Bug Fixes
+
+* add laravel 12 ([7bffb8c](https://git.customd.com/composer/eloquent-async-keys/commit/7bffb8c30a88f33748a135567fd6fd1dfb503ff9))
+
 ## [4.1.1](https://git.customd.com/composer/eloquent-async-keys/compare/v4.1.0...v4.1.1) (2025-01-28)
 
 
