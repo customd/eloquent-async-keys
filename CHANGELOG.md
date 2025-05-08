@@ -1,3 +1,10 @@
+## [4.1.3](https://git.customd.com/composer/eloquent-async-keys/compare/v4.1.2...v4.1.3) (2025-05-08)
+
+
+### Bug Fixes
+
+* **deps:** add renovate.json ([558eac0](https://git.customd.com/composer/eloquent-async-keys/commit/558eac0e5ac83b87e57e14482b55e53f6d16a529))
+
 ## [4.1.2](https://git.customd.com/composer/eloquent-async-keys/compare/v4.1.1...v4.1.2) (2025-03-01)
 
 
